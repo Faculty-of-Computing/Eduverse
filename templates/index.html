@@ -1,0 +1,145 @@
+<!-- index.html -->
+{% extends 'base.html' %}
+{% block title %}Home - Eduverse{% endblock %}
+{% block content %}
+
+<header class="hero">
+  <div class="hero-content">
+    <h4>Explore. Learn. Grow.</h4>
+    <h1>Welcome to <span>EduVerse</span></h1>
+    <p>An online platform that provides students with access to academic resources, services, and information.</p>
+    <button class="btn btn-primary" onclick="document.location='/register'">GET STARTED</button>
+  </div>
+</header>
+<section class="pencards-section">
+  <div class="pencard">
+    <img class="pencard-img" src="{{ url_for('static', filename='images/py.png') }}" alt="Web Development" />
+    <div class="pencard-title">Web Development</div>
+    <div class="pencard-desc">Unleash the creative problem solver and developer in you...</div>
+  </div>
+  <div class="pencard">
+    <img class="pencard-img" src="{{ url_for('static', filename='images/web.png') }}" alt="Computer Programming II" />
+    <div class="pencard-title">Computer Programming II</div>
+    <div class="pencard-desc">Organize your thoughts and study notes efficiently.</div>
+  </div>
+  <div class="pencard">
+    <img class="pencard-img" src="{{ url_for('static', filename='images/archi.png') }}" alt="Computer Architecture" />
+    <div class="pencard-title">Computer Architecture</div>
+    <div class="pencard-desc">Generate ideas and collaborate with classmates easily.</div>
+  </div>
+  <div class="pencard">
+    <img class="pencard-img" src="{{ url_for('static', filename='images/discrete.png') }}" alt="Discrete Structure" />
+    <div class="pencard-title">Discrete Structure</div>
+    <div class="pencard-desc">Collect and analyze information for your projects.</div>
+  </div>
+</section>
+    <section class="about"  id="about">
+  <div class="about-container">
+    <div class="about-text">
+      <h2>About EduVerse</h2>
+      <p>
+        EduVerse is an innovative online platform that connects students and instructors,
+        making learning interactive, accessible, and engaging. With video tutorials,
+        practice problems, and live classes, we empower learners to take control of
+        their education while giving instructors the tools to teach effectively.
+      </p>
+      <p>
+        Whether you’re a student seeking resources or an instructor sharing knowledge,
+        EduVerse provides a seamless experience designed to inspire and educate.
+      </p>
+        <br>
+        <br>
+    <div class="offer-section">
+      <h2>What We Offer</h2>
+      <ul>
+        <li>Academic Resources - Study guides, past questions, e-books, and course materials tailored to your curriculum.</li>
+          <br>
+        <li>Student Services - Tools to support your academic and personal development including mentorship, tutoring, and productivity tools.</li>
+          <br>
+        <li>Campus & Academic Updates - Stay informed with real-time announcements, events, and academic calendar alerts.</li>
+          <br>
+        <li>Student Community - Engage with peers, join interest groups, and collaborate on educational goals.</li>
+      </ul>
+      <br>
+      <br>
+    </div>
+
+        <div class="mission-section">
+      <h2>Our Mission</h2>
+      <p>
+        To simplify and enhance the student experience by building a centralized digital ecosystem
+        where every learner can explore, learn, and grow with ease.
+      </p>
+      <br>
+      <br>
+    </div>
+
+    <div class="why-section">
+      <h2>Why <span>EduVerse?</span></h2>
+      <ul>
+        <li>Designed by students, for students</li>
+          <br>
+        <li>Easy to navigate and mobile-friendly</li>
+          <br>
+        <li>Regularly updated with relevant academic tools and insights</li>
+          <br>
+        <li>Built to grow with you through every semester and beyond</li>
+      </ul>
+      <br>
+      <br>
+    </div>
+    </div>
+          <div class="about-image">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" width="500px" alt="About EduVerse">
+  </div>
+  </div>
+</section>
+
+
+<section class="faq-section">
+  <h2>Frequently Asked Questions</h2>
+  <div class="faq-wrapper">
+    <div class="faq-card" onclick="toggleFaq(this)">
+      <div class="faq-question">What topics are covered in the Web Development course?</div>
+      <div class="faq-answer">The Web Development course covers HTML, CSS, JavaScript, responsive design, and basic web app concepts.</div>
+    </div>
+    <div class="faq-card" onclick="toggleFaq(this)">
+      <div class="faq-question">How can I improve my Computer Architecture skills?</div>
+      <div class="faq-answer">EduVerse offers interactive lessons, practice problems, and quizzes to help you master Computer Architecture.</div>
+    </div>
+    <div class="faq-card" onclick="toggleFaq(this)">
+      <div class="faq-question">What resources are available for JAVA students?</div>
+      <div class="faq-answer">JAVA students can access video tutorials, experiment guides, and discussion forums for collaborative learning.</div>
+    </div>
+    <div class="faq-card" onclick="toggleFaq(this)">
+      <div class="faq-question">Is Information Technology suitable for beginners?</div>
+      <div class="faq-answer">Yes, our Information Technology course starts from the basics and gradually introduces advanced concepts.</div>
+    </div>
+    <div class="faq-card" onclick="toggleFaq(this)">
+      <div class="faq-question">Can I access EduVerse courses on my mobile device?</div>
+      <div class="faq-answer">Yes, EduVerse is mobile-friendly and you can access all courses and resources from your smartphone or tablet.</div>
+    </div>
+    <div class="faq-card" onclick="toggleFaq(this)">
+      <div class="faq-question">Are there any live classes or webinars available?</div>
+      <div class="faq-answer">EduVerse regularly hosts live classes and webinars for students to interact with instructors and peers in real time.</div>
+    </div>
+    <div class="faq-card" onclick="toggleFaq(this)">
+      <div class="faq-question">How do I track my learning progress on EduVerse?</div>
+      <div class="faq-answer">You can track your progress through your dashboard, which displays completed lessons, quiz scores, and achievements.</div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>&copy; 2025 EduVerse. All rights reserved by group 8.</p>
+</footer>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+  function toggleFaq(element) {
+    element.classList.toggle('active');
+    element.setAttribute('aria-expanded', element.classList.contains('active'));
+  }
+</script>
+{% endblock %}

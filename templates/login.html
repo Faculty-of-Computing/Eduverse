@@ -1,0 +1,165 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<style>
+        :root{
+      --accent: #86c83b;
+      --accent-dark: #78b32e;
+      --muted: #9aa0a6;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family: "Poppins", sans-serif;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:100vh;
+      background: #8a8bb0;
+      padding: 32px;
+    }
+    .inner{
+      display:flex;
+      gap: 28px;
+      max-width: 1100px;
+      width:100%;
+    }
+    .left-scene{
+      flex: 1.05;
+      min-width: 380px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: #8a8bae;
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: inset 0 6px 16px rgba(0,0,0,0.06);
+    }
+    .scene-img{
+      max-width:95%;
+      height: auto;
+      display:block;
+      border-radius: 12px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+      object-fit: cover;
+    }
+    .signup-card{
+      width: 420px;
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 12px 30px rgba(30,40,30,0.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 28px;
+    }
+    .card-inner{
+      width: 100%;
+      padding: 8px 6px;
+    }
+    .title{
+      font-size: 32px;
+      margin: 8px 0 18px 0;
+      font-weight:700;
+      color:#0d1a12;
+    }
+    .signup-form{ display:flex; flex-direction:column; gap:14px; font-size:14px; }
+    .field input{
+      width:100%;
+      padding: 14px 16px;
+      border-radius: 999px;
+      border: 1px solid #e6e9ea;
+      background: #fafafa;
+      outline: none;
+      font-size: 15px;
+    }
+    .field input:focus{
+      box-shadow: 0 6px 18px rgba(120,180,90,0.12);
+      border-color: var(--accent);
+    }
+    .password-wrap{ position:relative; display:flex; align-items:center; }
+    .password-wrap input{ padding-right:44px; }
+    .eye{
+      position:absolute;
+      right:6px;
+      top:50%;
+      transform:translateY(-50%);
+      height:34px;
+      width:40px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+    }
+    .role-select{
+      display:flex;
+      justify-content:space-around;
+      padding:6px 0;
+      font-size:14px;
+    }
+    .role-select label{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      cursor:pointer;
+    }
+    .btn-cta{
+      margin-top:6px;
+      width:100%;
+      padding: 14px;
+      border-radius: 999px;
+      border:none;
+      font-weight:600;
+      font-size:15px;
+      color: #09210a;
+      background: #8a8bae;
+      box-shadow: 0 8px 22px rgba(120,180,90,0.18);
+      cursor:pointer;
+    }
+    .login{ text-align:center; margin-top:10px; color:#96a199; font-size:13px; }
+    .login a{ color:#8a8bae; text-decoration:none; font-weight:600 }
+    @media (max-width: 980px){
+      .inner{ flex-direction:column; gap:18px; }
+      .left-scene{ min-width: 100%; order:1; }
+      .signup-card{ width:100%; order:2; }
+    }
+</style>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login — Eduverse</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="inner">
+        <div class="left-scene">
+            <img src="{{ url_for('static', filename='images/man.jpg') }}" class="scene-img" alt="Illustration of a person at a desk">
+        </div>
+        <div class="signup-card">
+            <div class="card-inner">
+                <h1 class="title">Login</h1>
+                <form class="signup-form" method="POST" action="{{ url_for('login') }}" autocomplete="off"> <!-- Added autocomplete="off" for security -->
+                    <label class="field">
+                        <input type="email" name="email" placeholder="Email" required aria-required="true">
+                    </label>
+                    <label class="field">
+                        <div class="password-wrap">
+                            <input type="password" name="password" placeholder="Password" required aria-required="true">
+                            <button class="eye" type="button" aria-label="Toggle password visibility">👁</button> <!-- Fixed: Moved 👁 inside button -->
+                        </div>
+                    </label>
+                    <button class="btn-cta" type="submit">Login</button>
+                    <p class="login">Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.querySelectorAll('.eye').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = btn.parentElement.querySelector('input');
+                input.type = input.type === 'password' ? 'text' : 'password';
+                btn.textContent = input.type === 'password' ? '👁' : '🙈'; // Enhanced: Toggle icon
+            });
+        });
+    </script>
+</body>
+</html>

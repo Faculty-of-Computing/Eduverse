@@ -1,0 +1,16 @@
+<!-- edit_topic.html -->
+{% extends 'base.html' %}
+{% block title %}Edit Topic: {{ topic.heading }} | Eduverse{% endblock %}
+{% block content %}
+<section class="dashboard-card" aria-labelledby="edit-title">
+  <h2 id="edit-title" class="card-title">Edit Topic: {{ topic.heading }} (Course: {{ topic.course_title }})</h2>
+  <form method="POST" action="{{ url_for('edit_topic', topic_id=topic.id) }}">
+    <div class="form-group">
+      <label for="content" class="form-label">Topic Content</label>
+      <textarea class="form-control" id="content" name="content" rows="8" aria-required="true">{{ topic.content or '' }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Save Content</button>
+    <a href="{{ url_for('instructor_dashboard') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+</section>
+{% endblock %}

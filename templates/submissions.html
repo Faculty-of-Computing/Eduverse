@@ -1,0 +1,47 @@
+<!-- submissions.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Submissions | LearnSphere</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+<div class="container">
+<nav class="sidebar" aria-label="Sidebar navigation">
+        <a href="{{ url_for('student_dashboard') }}" class="active">Dashboard</a>
+      <a href="{{ url_for('profile') }}">Profile</a>
+      <a href="{{ url_for('courses') }}">Courses</a>
+      <a href="{{ url_for('submissions') }}">Submissions</a>
+      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </nav>
+  <section class="dashboard-card" aria-labelledby="submissions-title">
+    <h2 id="submissions-title" class="card-title">Your Assignment Submissions</h2>
+
+    {% if submissions %}
+    <div class="course-grid">
+      {% for submission in submissions %}
+      <article class="course-card">
+        <h3 class="course-title">Course: {{ submission.course_title }}</h3>
+        <p class="card-text">Submitted: {{ submission.submitted_at | datetimeformat or 'Unknown' }}</p>
+        <p class="card-text">Submission: {{ submission.submission_text | truncate(100, true) }}</p>
+
+        {% if submission.feedback %}
+        <div class="feedback-section">
+          <p class="card-text"><strong>Feedback:</strong> {{ submission.feedback }}</p>
+          <p class="card-text"><strong>Grade:</strong> {{ submission.grade }}/100</p>
+        </div>
+        {% else %}
+        <p class="card-text">Awaiting feedback from instructor.</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="card-text">You have not submitted any assignments yet.</p>
+    {% endif %}
+  </section>
+</div>
+</body>
+</html>

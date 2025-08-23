@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Available Courses | Eduverse</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <nav class="sidebar" aria-label="Sidebar navigation">
+      <a href="{{ url_for('student_dashboard') }}" class="active">Dashboard</a>
+      <a href="{{ url_for('profile') }}">Profile</a>
+      <a href="{{ url_for('courses') }}">Courses</a>
+      <a href="{{ url_for('submissions') }}">Submissions</a>
+      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </nav>
+
+    <!-- Main content -->
+    <main class="dashboard-card">
+      <h2 id="courses-title" class="card-title">Available Courses</h2>
+
+      <div class="course-grid" role="list">
+        {% for course in courses %}
+        <article class="course-card" role="listitem">
+          <h3 class="course-title">{{ course.title }}</h3>
+
+          {% if course.image_path %}
+          <img src="{{ url_for('static', filename=course.image_path) }}"
+               alt="{{ course.title }} thumbnail"
+               class="course-thumbnail">
+          {% endif %}
+
+          <p class="card-text">{{ course.description }}</p>
+
+          {% if course.id in enrolled_milestones %}
+            {% set milestones = enrolled_milestones[course.id] %}
+            {% set topic_count = topics[course.id] | length %}
+            {% set total_milestones = 1 + topic_count %}
+            {% set progress = ((milestones | length) / total_milestones * 100) | round(0) %}
+
+            <div class="course-progress">Progress: {{ progress }}%</div>
+            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn btn-primary">Continue</a>
+          {% else %}
+            <a href="{{ url_for('enroll', course_id=course.id) }}" class="btn btn-primary">Enroll</a>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</body>

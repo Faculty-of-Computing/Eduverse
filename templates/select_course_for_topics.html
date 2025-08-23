@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Course for Topics | Eduverse</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar" aria-label="Sidebar navigation">
+            <a href="{{ url_for('instructor_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('manage_courses') }}">Manage Courses</a>
+            <a href="{{ url_for('manage_topics') }}" class="active">Manage Topics</a>
+            <a href="{{ url_for('profile') }}">Profile</a>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </nav>
+
+        <!-- Main Content -->
+        <section class="dashboard-card" aria-labelledby="courses-title">
+            <h2 id="courses-title" class="card-title">Select Course to Manage Topics</h2>
+
+            {% if courses %}
+            <div class="course-grid">
+                {% for course in courses %}
+                <article class="course-card">
+                    <h3 class="course-title">{{ course.title }}</h3>
+                    <a href="{{ url_for('manage_topics', course_id=course.id) }}" class="btn btn-primary">Manage Topics</a>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No courses available. Create a course via
+                <a href="{{ url_for('create_course') }}">Create Course</a>.
+            </p>
+            {% endif %}
+        </section>
+    </div>
+</body>
+</html>

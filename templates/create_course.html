@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Course | Eduverse</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <div class="container">
+    <nav class="sidebar" aria-label="Sidebar navigation">
+        <a href="{{ url_for('instructor_dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('manage_courses') }}" class="nav-link">Manage Courses</a>
+        <a href="{{ url_for('manage_topics') }}" class="nav-link">Manage Topics</a>
+        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </nav>
+
+    <article class="profile-card" aria-labelledby="create-title">
+      <h2 id="create-title" class="card-title">Create New Course</h2>
+
+      <form method="POST" enctype="multipart/form-data" action="{{ url_for('create_course') }}">
+        <div class="form-group">
+          <label for="title" class="form-label">Course Title</label>
+          <input type="text" id="title" name="title" class="form-control" required aria-required="true">
+        </div>
+        <div class="form-group">
+          <label for="description" class="form-label">Description</label>
+          <textarea id="description" name="description" class="form-control" rows="4" required aria-required="true"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="image" class="form-label">Course Thumbnail</label>
+          <input type="file" id="image" name="image" class="form-control" accept="image/*">
+        </div>
+        <div class="form-group">
+          <label for="video" class="form-label">Course Video</label>
+          <input type="file" id="video" name="video" class="form-control" accept="video/mp4,video/webm">
+        </div>
+        <div class="form-group">
+          <label for="topics" class="form-label">Topics (comma-separated)</label>
+          <input type="text" id="topics" name="topics" class="form-control" placeholder="Topic1, Topic2, ...">
+        </div>
+        <button type="submit" class="btn btn-primary">Create Course</button>
+      </form>
+    </article>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

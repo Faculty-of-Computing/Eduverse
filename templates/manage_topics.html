@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Topics | Eduverse</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+</head>
+<body>
+<div class = "container">
+  <nav class="sidebar" aria-label="Sidebar navigation">
+    <a href="{{ url_for('instructor_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('manage_courses') }}">Manage Courses</a>
+    <a href="{{ url_for('manage_topics') }}">Manage Topics</a>
+    <a href="{{ url_for('profile') }}">Profile</a>
+    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+  </nav>
+
+    <section class="dashboard-card" aria-labelledby="topics-title">
+      <h2 id="topics-title" class="card-title">Manage Topic Content</h2>
+
+      {% if courses %}
+        <div class="course-grid">
+          {% for course in courses %}
+            <article class="course-card" role="button" tabindex="0" aria-expanded="false" onclick="toggleCourseTopics(this)">
+              <h3 class="course-title">{{ course.title }}</h3>
+              {% if course.image_path %}
+                <img src="{{ url_for('static', filename=course.image_path) }}" alt="{{ course.title }} thumbnail" class="course-thumbnail">
+              {% endif %}
+              <p>{{ course.description | truncate(100, true) }}</p>
+
+              <!-- Topics -->
+              <div class="topics-list" style="display: none;">
+                {% if topics[course.id] %}
+                  {% for topic in topics[course.id] %}
+                    <div class="topic-card">
+                      <p>
+                        <strong>{{ topic.heading }}</strong><br>
+                        <span>{{ topic.content | truncate(100, true) or 'No content set' }}</span><br>
+                        <a href="{{ url_for('edit_topic', topic_id=topic.id) }}" class="btn">Edit Content</a>
+                      </p>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <p>No topics available for this course.</p>
+                {% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No courses available. Create a course via
+          <a href="{{ url_for('create_course') }}">Create Course</a>.
+        </p>
+      {% endif %}
+    </section>
+  </div>
+
+
+  <script>
+    function toggleCourseTopics(element) {
+      const topicsList = element.querySelector('.topics-list');
+      const isExpanded = element.getAttribute('aria-expanded') === 'true';
+      element.setAttribute('aria-expanded', !isExpanded);
+      topicsList.style.display = isExpanded ? 'none' : 'block';
+      topicsList.style.animation = isExpanded ? 'fadeOut 0.3s ease' : 'fadeIn 0.3s ease';
+    }
+
+    document.querySelectorAll('.course-card').forEach(card => {
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleCourseTopics(card);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
