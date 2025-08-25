@@ -1,12 +1,12 @@
 <!-- topic.html -->
 {% extends 'base.html' %}
-{% block title %}{{ topic }} - {{ course.title }} | LearnSphere{% endblock %}
+{% block title %}{{ topic }} - {{ course.title }} | Eduverse{% endblock %}
 {% block content %}
 <section class="dashboard-card" aria-labelledby="topic-title">
   {% if course %}
   <h2 id="topic-title" class="card-title">{{ course.title }} - {{ topic }}</h2>
   <div class="topic-content">
-    {{ topic_content | safe }} <!-- Keep safe if trusted; else remove -->
+    {{ topic_content | safe }}
   </div>
   {% if next_index is not none %}
   <a href="{{ url_for('topic_page', course_id=course.id, topic_index=next_index) }}" class="btn btn-primary">Next Topic</a>

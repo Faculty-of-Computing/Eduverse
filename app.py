@@ -5,25 +5,27 @@ import sqlite3
 import os
 import secrets
 from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash  # Added for password hashing
+from werkzeug.security import generate_password_hash, check_password_hash
 
+# Initialize Flask app
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'
 
-# Configure file uploads
+# Configure file upload settings
 UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}  # Updated
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# Check if file extension is allowed
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Initialize database
 init_db()
 
-# Custom filter for datetime formatting
+# Custom filter for formatting datetime
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%Y-%m-%d %H:%M'):
     if value == 'now':
@@ -33,13 +35,12 @@ def datetimeformat(value, format='%Y-%m-%d %H:%M'):
     except (ValueError, TypeError):
         return value
 
-# Home page
+# Home page route
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Profile
-# Profile
+# User profile page
 @app.route('/profile')
 def profile():
     if 'user_id' not in session:
@@ -58,7 +59,7 @@ def register():
         firstname = request.form['firstname']
         lastname = request.form['lastname']
         email = request.form['email']
-        password = generate_password_hash(request.form['password'])  # Hashed
+        password = generate_password_hash(request.form['password'])
         role = request.form['role']
         db = get_db()
         try:
@@ -71,7 +72,7 @@ def register():
             flash('User already exists.', 'error')
     return render_template('register.html')
 
-# User login (Updated to check hashed password)
+# User login
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -89,13 +90,13 @@ def login():
         flash('Invalid credentials.', 'error')
     return render_template('login.html')
 
-# Logout
+# User logout
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
 
-# Student dashboard (Fixed image_path bug)
+# Student dashboard
 @app.route('/student_dashboard')
 def student_dashboard():
     if 'user_id' not in session or session['role'] != 'student':
@@ -104,21 +105,21 @@ def student_dashboard():
     user = db.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
     enrolled_courses = db.execute('SELECT c.id, c.title, c.image_path, e.milestones FROM courses c '
                                   'INNER JOIN enrollments e ON c.id = e.course_id WHERE e.user_id = ?',
-                                  (session['user_id'],)).fetchall()  # Added c.image_path
+                                  (session['user_id'],)).fetchall()
     progress_data = {}
     for course in enrolled_courses:
         milestones = set(course['milestones'].split(',') if course['milestones'] else [])
         topics = db.execute('SELECT heading FROM topics WHERE course_id = ? ORDER BY topic_index', (course['id'],)).fetchall()
-        total_milestones = 1 + len(topics)  # Assignment + topics
+        total_milestones = 1 + len(topics)
         progress = (len(milestones) / total_milestones) * 100 if total_milestones > 0 else 0
         progress_data[course['id']] = {
             'title': course['title'],
             'progress': progress,
-            'image_path': course['image_path']  # Added
+            'image_path': course['image_path']
         }
     return render_template('student_dashboard.html', user=user, progress_data=progress_data)
 
-# Submissions page
+# View student submissions
 @app.route('/submissions')
 def submissions():
     if 'user_id' not in session or session['role'] != 'student':
@@ -129,7 +130,7 @@ def submissions():
                              'WHERE s.user_id = ?', (session['user_id'],)).fetchall()
     return render_template('submissions.html', submissions=submissions)
 
-# Courses page
+# List available courses
 @app.route('/courses')
 def courses():
     if 'user_id' not in session or session['role'] != 'student':
@@ -142,7 +143,7 @@ def courses():
     topics = {course['id']: [t['heading'] for t in db.execute('SELECT heading FROM topics WHERE course_id = ? ORDER BY topic_index', (course['id'],)).fetchall()] for course in courses}
     return render_template('courses.html', courses=courses, enrolled_milestones=enrolled_milestones, topics=topics)
 
-# Course detail page (Cleaned duplicate code)
+# Course detail page
 @app.route('/course/<int:course_id>')
 def course_detail(course_id):
     if 'user_id' not in session or session['role'] != 'student':
@@ -158,7 +159,7 @@ def course_detail(course_id):
     progress = (len(milestones) / total_milestones) * 100 if total_milestones > 0 else 0
     return render_template('course_detail.html', course=course, milestones=milestones, progress=progress, topics=topics)
 
-# Topic page
+# Topic page for a course
 @app.route('/course/<int:course_id>/topic/<int:topic_index>')
 def topic_page(course_id, topic_index):
     if 'user_id' not in session or session['role'] != 'student':
@@ -178,7 +179,6 @@ def topic_page(course_id, topic_index):
     topics = db.execute('SELECT heading FROM topics WHERE course_id = ? ORDER BY topic_index', (course_id,)).fetchall()
     topics = [t['heading'] for t in topics]
     next_index = topic_index + 1 if topic_index + 1 < len(topics) else None
-    # Auto-mark current topic as completed
     if current_topic not in milestones:
         milestones.add(current_topic)
         db.execute('UPDATE enrollments SET milestones = ? WHERE user_id = ? AND course_id = ?',
@@ -198,7 +198,7 @@ def enroll(course_id):
     db.commit()
     return redirect(url_for('topic_page', course_id=course_id, topic_index=0))
 
-# Update milestone
+# Update course milestone
 @app.route('/update_milestone/<int:course_id>/<string:milestone>', methods=['POST'])
 def update_milestone(course_id, milestone):
     if 'user_id' not in session or session['role'] != 'student':
@@ -214,7 +214,7 @@ def update_milestone(course_id, milestone):
         db.commit()
     return redirect(url_for('course_detail', course_id=course_id))
 
-# Assignment submission
+# Submit course assignment
 @app.route('/assignment/<int:course_id>', methods=['GET', 'POST'])
 def assignment(course_id):
     if 'user_id' not in session or session['role'] != 'student':
@@ -244,7 +244,7 @@ def assignment(course_id):
             flash('Failed to submit assignment.', 'error')
     return render_template('assignment.html', course_id=course_id, course=course)
 
-# Instructor dashboard (Fixed submissions query and template)
+# Instructor dashboard
 @app.route('/instructor_dashboard', methods=['GET', 'POST'])
 def instructor_dashboard():
     if 'user_id' not in session or session['role'] != 'instructor':
@@ -273,10 +273,10 @@ def instructor_dashboard():
         JOIN courses c ON s.course_id = c.id
         WHERE s.course_id IN (SELECT id FROM courses WHERE instructor_id = ?)
         AND s.feedback IS NULL
-    ''', (session['user_id'],)).fetchall()  # Fixed query
+    ''', (session['user_id'],)).fetchall()
     return render_template('instructor_dashboard.html', user=user, courses=courses, submissions=submissions)
 
-# Create course
+# Create a new course
 @app.route('/create_course', methods=['GET', 'POST'])
 def create_course():
     if 'user_id' not in session or session['role'] != 'instructor':
@@ -402,7 +402,7 @@ def manage_courses():
     courses = db.execute('SELECT * FROM courses WHERE instructor_id = ?', (session['user_id'],)).fetchall()
     return render_template('manage_courses.html', courses=courses)
 
-# Manage topics (Updated to show courses first)
+# Manage course topics
 @app.route('/manage_topics')
 @app.route('/manage_topics/<int:course_id>')
 def manage_topics(course_id=None):
@@ -411,7 +411,7 @@ def manage_topics(course_id=None):
     db = get_db()
     if course_id is None:
         courses = db.execute('SELECT * FROM courses WHERE instructor_id = ?', (session['user_id'],)).fetchall()
-        return render_template('select_course_for_topics.html', courses=courses)  # New template for course selection
+        return render_template('select_course_for_topics.html', courses=courses)
     else:
         topics = db.execute('SELECT t.id, t.course_id, t.topic_index, t.heading, t.content, c.title AS course_title '
                             'FROM topics t JOIN courses c ON t.course_id = c.id WHERE t.course_id = ? AND c.instructor_id = ?',
@@ -421,7 +421,7 @@ def manage_topics(course_id=None):
             return redirect(url_for('manage_topics'))
         return render_template('manage_topics.html', topics=topics)
 
-# Edit topic content
+# Edit a topic's content
 @app.route('/edit_topic/<int:topic_id>', methods=['GET', 'POST'])
 def edit_topic(topic_id):
     if 'user_id' not in session or session['role'] != 'instructor':
@@ -438,11 +438,12 @@ def edit_topic(topic_id):
             db.execute('UPDATE topics SET content = ? WHERE id = ?', (content, topic_id))
             db.commit()
             flash('Topic content updated!', 'success')
-            return redirect(url_for('manage_topics', course_id=topic['course_id']))  # Redirect back to course topics
+            return redirect(url_for('manage_topics', course_id=topic['course_id']))
         except sqlite3.Error:
             db.rollback()
             flash('Failed to update topic content.', 'error')
     return render_template('edit_topic.html', topic=topic)
 
+# Run app
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

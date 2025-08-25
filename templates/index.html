@@ -136,8 +136,9 @@
 
 {% endblock %}
 {% block extra_js %}
-<script>
-  function toggleFaq(element) {
+
+
+function toggleFaq(element) {
     element.classList.toggle('active');
     element.setAttribute('aria-expanded', element.classList.contains('active'));
   }
