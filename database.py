@@ -1,14 +1,14 @@
 import sqlite3
 
 def init_db():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect('database.db', timeout= 5)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         firstname TEXT,
         lastname TEXT,
-        email TEXT,
+        email TEXT UNIQUE,
         password TEXT,
         role TEXT
     )''')
