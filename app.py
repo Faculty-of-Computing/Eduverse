@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from database import init_db, get_db
+from database import init_db, get_db, close_db
 from datetime import datetime
 import sqlite3
 import os
@@ -18,12 +18,17 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# Initialize DB once
+init_db()
+
+# Close DB connection after each request
+@app.teardown_appcontext
+def teardown_db(exception):
+    close_db(exception)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Init database
-init_db()
 
 #filter for formatting datetime
 @app.template_filter('datetimeformat')
@@ -61,16 +66,25 @@ def register():
         email = request.form['email']
         password = generate_password_hash(request.form['password'])
         role = request.form['role']
+
         db = get_db()
         try:
-            db.execute('INSERT INTO users (firstname, lastname, email, password, role) VALUES (?, ?, ?, ?, ?)',
-                       (firstname, lastname, email, password, role))
+            db.execute(
+                'INSERT INTO users (firstname, lastname, email, password, role) VALUES (?, ?, ?, ?, ?)',
+                (firstname, lastname, email, password, role)
+            )
             db.commit()
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('login'))
         except sqlite3.IntegrityError:
+            db.rollback()
             flash('User already exists.', 'error')
+        except sqlite3.Error as e:
+            db.rollback()
+            flash(f'Database error: {e}', 'error')
+
     return render_template('register.html')
+
 
 # User login
 @app.route('/login', methods=['GET', 'POST'])
