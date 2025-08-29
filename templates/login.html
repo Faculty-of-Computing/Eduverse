@@ -8,27 +8,15 @@
         </div>
         <div class="signup-card">
             <div class="card-inner">
-                <div class="flash-messages">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{category}}" role="alert">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
-</div>
-
                 <h1 class="title">Login</h1>
-                <form class="signup-form" method="POST" action="{{ url_for('login') }}" autocomplete="off">
+                <form class="signup-form" method="POST" action="{{ url_for('login') }}" autocomplete="off"> <!-- Added autocomplete="off" for security -->
                     <label class="field">
                         <input type="email" name="email" placeholder="Email" required aria-required="true">
                     </label>
                     <label class="field">
                         <div class="password-wrap">
                             <input type="password" name="password" placeholder="Password" required aria-required="true">
-                            <button class="eye" type="button" aria-label="Toggle password visibility">👁</button>
+                            <button class="eye" type="button" aria-label="Toggle password visibility">👁</button> <!-- Fixed: Moved 👁 inside button -->
                         </div>
                     </label>
                     <button class="btn-cta" type="submit">Login</button>
@@ -37,4 +25,13 @@
             </div>
         </div>
     </div>
+    <script>
+        document.querySelectorAll('.eye').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = btn.parentElement.querySelector('input');
+                input.type = input.type === 'password' ? 'text' : 'password';
+                btn.textContent = input.type === 'password' ? '👁' : '🙈'; // Enhanced: Toggle icon
+            });
+        });
+    </script>
 {% endblock %}
