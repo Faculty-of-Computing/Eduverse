@@ -1,0 +1,53 @@
+<!-- base_dash.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Eduverse{% endblock %}</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    {% block extra_css %}{% endblock %}
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <main>
+        <div class="container">
+            <!-- Sidebar -->
+            <aside class="sidebar" role="navigation">
+                {% if session.get('user_id') %}
+                    {% if session.get('role') == 'student' %}
+                        <a href="{{ url_for('student_dashboard') }}" class="nav-link">Dashboard</a>
+                        <a href="{{ url_for('courses') }}" class="nav-link">Courses</a>
+                        <a href="{{ url_for('submissions') }}" class="nav-link">Submissions</a>
+                        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                    {% elif session.get('role') == 'instructor' %}
+                        <a href="{{ url_for('instructor_dashboard') }}" class="nav-link">Dashboard</a>
+                        <a href="{{ url_for('manage_courses') }}" class="nav-link">Manage Courses</a>
+                        <a href="{{ url_for('manage_topics') }}" class="nav-link">Manage Topics</a>
+                        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                    {% endif %}
+                    <!-- Logout only when logged in -->
+                    <a href="{{ url_for('logout') }}" class="nav-link logout-btn">Logout</a>
+                {% else %}
+                    <!-- Login/Register only when NOT logged in -->
+                    <a href="{{ url_for('login') }}" class="nav-link">Log In</a>
+                    <a href="{{ url_for('register') }}" class="nav-link">Register</a>
+                {% endif %}
+            </aside>
+
+            <!-- Main Dashboard Content -->
+            <section class="dashboard-content">
+                {% block content %}{% endblock %}
+            </section>
+        </div>
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

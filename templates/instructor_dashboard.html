@@ -1,83 +1,70 @@
-<!DOCTYPE html><html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Instructor Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-  <div class="container">
-    <nav class="sidebar" aria-label="Sidebar navigation">
-            <a href="{{ url_for('instructor_dashboard') }}" class="nav-link">Dashboard</a>
-            <a href="{{ url_for('manage_courses') }}" class="nav-link">Manage Courses</a>
-            <a href="{{ url_for('manage_topics') }}" class="nav-link">Manage Topics</a>
-            <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
-            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </nav>
-
-<main>
-  <div class="dashboard-card">
-    <h2 class="card-title">Welcome, {{ user['firstname'] }}!</h2>
-    <p class="card-text">Role: {{ user.role }}</p>
-    <p class="card-text">Joined: {{ 'now' | datetimeformat }}</p>
-    <a href="{{ url_for('create_course') }}" class="btn btn-primary btn-block">Create Course</a>
-  </div>
-
-  <div class="dashboard-card">
-    <h2 class="card-title">Your Created Courses</h2>
-    {% if courses %}
-    <div class="course-grid">
-      {% for course in courses %}
-      <div class="course-card">
-        <div class="course-title">{{ course.title }}</div>
-        {% if course.image_path %}
-        <img src="{{ url_for('static', filename=course.image_path) }}" alt="{{ course.title }} Thumbnail" class="course-thumbnail">
-        {% endif %}
-        <p class="card-text">{{ course.description | truncate(100, true) }}</p>
-        <p class="card-text">Created: {{ course.created_at | datetimeformat }}</p>
+<!-- instructor_dashboard.html -->
+{% extends 'base_dash.html' %}
+{% block title %}Instructor Dashboard | Eduverse{% endblock %}
+{% block content %}
+     <section>
+      <div class="dashboard-card">
+        <h2 class="card-title">Welcome, {{ user['firstname'] }}!</h2>
+        <p class="card-text">Role: {{ user.role }}</p>
+        <p class="card-text">Joined: {{ 'now' | datetimeformat }}</p>
+        <a href="{{ url_for('create_course') }}" class="btn btn-primary btn-block">Create Course</a>
       </div>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p class="card-text">You haven't created any courses yet. Click "Create Course" to get started!</p>
-    {% endif %}
-  </div>
 
-  <div class="dashboard-card">
-    <h2 class="card-title">Review Submissions</h2>
-    {% if submissions %}
-    <div class="course-grid">
-      {% for submission in submissions %}
-      <div class="course-card">
-        <div class="course-title">Student: {{ submission.username }}</div>
-        <p class="card-text">Course ID: {{ submission.course_id }}</p>
-        <p class="card-text">Submitted: {{ submission.submitted_at | datetimeformat }}</p>
-        <p class="card-text">Submission: {{ submission.submission_text | truncate(100, true) }}</p>
-
-        {% if not submission.feedback %}
-        <form method="POST" action="{{ url_for('instructor_dashboard') }}">
-          <input type="hidden" name="submission_id" value="{{ submission.id }}">
-          <div class="form-group">
-            <label for="feedback_{{ submission.id }}" class="form-label">Feedback</label>
-            <textarea class="form-control" id="feedback_{{ submission.id }}" name="feedback" rows="2" required></textarea>
+      <div class="dashboard-card">
+        <h2 class="card-title">Your Created Courses</h2>
+        {% if courses %}
+        <div class="course-grid">
+          {% for course in courses %}
+          <div class="course-card">
+            <div class="course-title">{{ course.title }}</div>
+            {% if course.image_path %}
+            <img src="{{ url_for('static', filename=course.image_path) }}" alt="{{ course.title }} Thumbnail" class="course-thumbnail">
+            {% endif %}
+            <p class="card-text">{{ course.description | truncate(100, true) }}</p>
+            <p class="card-text">Created: {{ course.created_at | datetimeformat }}</p>
           </div>
-          <div class="form-group">
-            <label for="grade_{{ submission.id }}" class="form-label">Grade (0-100)</label>
-            <input type="number" class="form-control" id="grade_{{ submission.id }}" name="grade" min="0" max="100" required>
-          </div>
-          <button type="submit" class="btn btn-primary">Submit Feedback</button>
-        </form>
+          {% endfor %}
+        </div>
         {% else %}
-        <p class="card-text">Feedback: {{ submission.feedback }}</p>
-        <p class="card-text">Grade: {{ submission.grade }}</p>
+        <p class="card-text">You haven't created any courses yet. Click "Create Course" to get started!</p>
         {% endif %}
       </div>
-      {% endfor %}
+
+      <div class="dashboard-card">
+        <h2 class="card-title">Review Submissions</h2>
+        {% if submissions %}
+        <div class="course-grid">
+          {% for submission in submissions %}
+          <div class="course-card">
+            <div class="course-title">Student: {{ submission.username }}</div>
+            <p class="card-text">Course ID: {{ submission.course_id }}</p>
+            <p class="card-text">Submitted: {{ submission.submitted_at | datetimeformat }}</p>
+            <p class="card-text">Submission: {{ submission.submission_text | truncate(100, true) }}</p>
+
+            {% if not submission.feedback %}
+            <form method="POST" action="{{ url_for('instructor_dashboard') }}">
+              <input type="hidden" name="submission_id" value="{{ submission.id }}">
+              <div class="form-group">
+                <label for="feedback_{{ submission.id }}" class="form-label">Feedback</label>
+                <textarea class="form-control" id="feedback_{{ submission.id }}" name="feedback" rows="2" required></textarea>
+              </div>
+              <div class="form-group">
+                <label for="grade_{{ submission.id }}" class="form-label">Grade (0-100)</label>
+                <input type="number" class="form-control" id="grade_{{ submission.id }}" name="grade" min="0" max="100" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Submit Feedback</button>
+            </form>
+            {% else %}
+            <p class="card-text">Feedback: {{ submission.feedback }}</p>
+            <p class="card-text">Grade: {{ submission.grade }}</p>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="card-text">No submissions to review.</p>
+        {% endif %}
     </div>
-    {% else %}
-    <p class="card-text">No submissions to review.</p>
-    {% endif %}
-  </div>
-</main>  </div>
-</body>
+     </section>
+{% endblock %}
 

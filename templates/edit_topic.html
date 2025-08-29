@@ -1,20 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Edit Topic: {{ topic.heading }} | Eduverse</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-<div class="container">
-    <nav class="sidebar" aria-label="Sidebar navigation">
-        <a href="{{ url_for('instructor_dashboard') }}" class="nav-link">Dashboard</a>
-        <a href="{{ url_for('manage_courses') }}" class="nav-link">Manage Courses</a>
-        <a href="{{ url_for('manage_topics') }}" class="nav-link">Manage Topics</a>
-        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
-        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </nav>
+<!-- edit_topic.html -->
+{% extends 'base_dash.html' %}
+{% block title %}Edit Topic: {{ topic.heading }} | LearnSphere{% endblock %}
+{% block content %}
 <section class="dashboard-card" aria-labelledby="edit-title">
   <h2 id="edit-title" class="card-title">
     Edit Topic: {{ topic.heading }} (Course: {{ topic.course_title }})
@@ -29,6 +16,4 @@
     <a href="{{ url_for('instructor_dashboard') }}" class="btn btn-secondary">Cancel</a>
   </form>
 </section>
-</div>
-</body>
-</html>
+{% endblock %}

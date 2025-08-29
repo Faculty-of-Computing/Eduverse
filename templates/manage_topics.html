@@ -1,22 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Manage Topics | Eduverse</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-
-</head>
-<body>
- <div class="container">
-      <nav class="sidebar" aria-label="Sidebar navigation">
-        <a href="{{ url_for('instructor_dashboard') }}" class="nav-link">Dashboard</a>
-        <a href="{{ url_for('manage_courses') }}" class="nav-link">Manage Courses</a>
-        <a href="{{ url_for('manage_topics') }}" class="nav-link">Manage Topics</a>
-        <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
-        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </nav>
-
+<!-- manage_topics.html -->
+{% extends 'base_dash.html' %}
+{% block title %} manage topics | Eduverse {% endblock %}
+{% block content %}
 <section class="dashboard-card" aria-labelledby="topics-title">
   <h2 id="topics-title" class="card-title">
     Manage Topics for {{ topics[0].course_title if topics else 'Unknown' }}
@@ -39,8 +24,6 @@
   {% else %}
   <p class="card-text">No topics available. Add topics to your courses via the Manage Courses page.</p>
   {% endif %}
-
 </section>
-</div>
-</body>
-</html>
+{% endblock %}
+

@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from database import init_db, get_db, close_db
 from datetime import datetime
-import sqlite3
+import psycopg2
+import psycopg2.extras
 import os
 import secrets
 from werkzeug.utils import secure_filename
@@ -18,8 +19,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Initialize DB once
-init_db()
+
+# Initialize DB connection before each request
+@app.before_request
+def before_request():
+    init_db()
 
 # Close DB connection after each request
 @app.teardown_appcontext
@@ -51,7 +55,10 @@ def profile():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     db = get_db()
-    user = db.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
+    user = cur.fetchone()
+    cur.close()
     if not user:
         flash('User not found.', 'error')
         return redirect(url_for('index'))
@@ -68,20 +75,23 @@ def register():
         role = request.form['role']
 
         db = get_db()
+        cur = db.cursor()
         try:
-            db.execute(
-                'INSERT INTO users (firstname, lastname, email, password, role) VALUES (?, ?, ?, ?, ?)',
+            cur.execute(
+                'INSERT INTO users (firstname, lastname, email, password, role) VALUES (%s, %s, %s, %s, %s)',
                 (firstname, lastname, email, password, role)
             )
             db.commit()
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('login'))
-        except sqlite3.IntegrityError:
+        except psycopg2.IntegrityError:
             db.rollback()
             flash('User already exists.', 'error')
-        except sqlite3.Error as e:
+        except psycopg2.Error as e:
             db.rollback()
             flash(f'Database error: {e}', 'error')
+        finally:
+            cur.close()
 
     return render_template('register.html')
 
@@ -93,7 +103,10 @@ def login():
         email = request.form['email']
         password = request.form['password']
         db = get_db()
-        user = db.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+        cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute('SELECT * FROM users WHERE email = %s', (email,))
+        user = cur.fetchone()
+        cur.close()
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
             session['email'] = user['email']
@@ -116,14 +129,16 @@ def student_dashboard():
     if 'user_id' not in session or session['role'] != 'student':
         return redirect(url_for('index'))
     db = get_db()
-    user = db.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
-    enrolled_courses = db.execute('SELECT c.id, c.title, c.image_path, e.milestones FROM courses c '
-                                  'INNER JOIN enrollments e ON c.id = e.course_id WHERE e.user_id = ?',
-                                  (session['user_id'],)).fetchall()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
+    user = cur.fetchone()
+    cur.execute('SELECT c.id, c.title, c.image_path, e.milestones FROM courses c INNER JOIN enrollments e ON c.id = e.course_id WHERE e.user_id = %s', (session['user_id'],))
+    enrolled_courses = cur.fetchall()
     progress_data = {}
     for course in enrolled_courses:
         milestones = set(course['milestones'].split(',') if course['milestones'] else [])
-        topics = db.execute('SELECT heading FROM topics WHERE course_id = ? ORDER BY topic_index', (course['id'],)).fetchall()
+        cur.execute('SELECT heading FROM topics WHERE course_id = %s ORDER BY topic_index', (course['id'],))
+        topics = cur.fetchall()
         total_milestones = 1 + len(topics)
         progress = (len(milestones) / total_milestones) * 100 if total_milestones > 0 else 0
         progress_data[course['id']] = {
@@ -131,6 +146,7 @@ def student_dashboard():
             'progress': progress,
             'image_path': course['image_path']
         }
+    cur.close()
     return render_template('student_dashboard.html', user=user, progress_data=progress_data)
 
 # View student submissions
@@ -139,9 +155,10 @@ def submissions():
     if 'user_id' not in session or session['role'] != 'student':
         return redirect(url_for('index'))
     db = get_db()
-    submissions = db.execute('SELECT s.*, c.title AS course_title FROM submissions s '
-                             'JOIN courses c ON s.course_id = c.id '
-                             'WHERE s.user_id = ?', (session['user_id'],)).fetchall()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('SELECT s.*, c.title AS course_title FROM submissions s JOIN courses c ON s.course_id = c.id WHERE s.user_id = %s', (session['user_id'],))
+    submissions = cur.fetchall()
+    cur.close()
     return render_template('submissions.html', submissions=submissions)
 
 # List available courses
@@ -150,11 +167,17 @@ def courses():
     if 'user_id' not in session or session['role'] != 'student':
         return redirect(url_for('index'))
     db = get_db()
-    courses = db.execute('SELECT * FROM courses').fetchall()
-    enrolled_courses = db.execute('SELECT course_id, milestones FROM enrollments WHERE user_id = ?',
-                                  (session['user_id'],)).fetchall()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM courses')
+    courses = cur.fetchall()
+    cur.execute('SELECT course_id, milestones FROM enrollments WHERE user_id = %s', (session['user_id'],))
+    enrolled_courses = cur.fetchall()
     enrolled_milestones = {c['course_id']: c['milestones'].split(',') if c['milestones'] else [] for c in enrolled_courses}
-    topics = {course['id']: [t['heading'] for t in db.execute('SELECT heading FROM topics WHERE course_id = ? ORDER BY topic_index', (course['id'],)).fetchall()] for course in courses}
+    topics = {}
+    for course in courses:
+        cur.execute('SELECT heading FROM topics WHERE course_id = %s ORDER BY topic_index', (course['id'],))
+        topics[course['id']] = [t['heading'] for t in cur.fetchall()]
+    cur.close()
     return render_template('courses.html', courses=courses, enrolled_milestones=enrolled_milestones, topics=topics)
 
 # Course detail page
@@ -163,14 +186,17 @@ def course_detail(course_id):
     if 'user_id' not in session or session['role'] != 'student':
         return redirect(url_for('index'))
     db = get_db()
-    course = db.execute('SELECT * FROM courses WHERE id = ?', (course_id,)).fetchone()
-    enrollment = db.execute('SELECT milestones FROM enrollments WHERE user_id = ? AND course_id = ?',
-                            (session['user_id'], course_id)).fetchone()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM courses WHERE id = %s', (course_id,))
+    course = cur.fetchone()
+    cur.execute('SELECT milestones FROM enrollments WHERE user_id = %s AND course_id = %s', (session['user_id'], course_id))
+    enrollment = cur.fetchone()
     milestones = enrollment['milestones'].split(',') if enrollment and enrollment['milestones'] else []
-    topics = db.execute('SELECT heading FROM topics WHERE course_id = ? ORDER BY topic_index', (course_id,)).fetchall()
-    topics = [t['heading'] for t in topics]
+    cur.execute('SELECT heading FROM topics WHERE course_id = %s ORDER BY topic_index', (course_id,))
+    topics = [t['heading'] for t in cur.fetchall()]
     total_milestones = 1 + len(topics)
     progress = (len(milestones) / total_milestones) * 100 if total_milestones > 0 else 0
+    cur.close()
     return render_template('course_detail.html', course=course, milestones=milestones, progress=progress, topics=topics)
 
 # Topic page for a course
@@ -179,25 +205,29 @@ def topic_page(course_id, topic_index):
     if 'user_id' not in session or session['role'] != 'student':
         return redirect(url_for('index'))
     db = get_db()
-    course = db.execute('SELECT * FROM courses WHERE id = ?', (course_id,)).fetchone()
-    enrollment = db.execute('SELECT milestones FROM enrollments WHERE user_id = ? AND course_id = ?',
-                            (session['user_id'], course_id)).fetchone()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM courses WHERE id = %s', (course_id,))
+    course = cur.fetchone()
+    cur.execute('SELECT milestones FROM enrollments WHERE user_id = %s AND course_id = %s', (session['user_id'], course_id))
+    enrollment = cur.fetchone()
     milestones = set(enrollment['milestones'].split(',') if enrollment and enrollment['milestones'] else [])
-    topic = db.execute('SELECT heading, content FROM topics WHERE course_id = ? AND topic_index = ?',
-                       (course_id, topic_index)).fetchone()
+    cur.execute('SELECT heading, content FROM topics WHERE course_id = %s AND topic_index = %s', (course_id, topic_index))
+    topic = cur.fetchone()
     if not course or not topic:
+        cur.close()
         flash('Invalid topic selection.', 'error')
         return redirect(url_for('course_detail', course_id=course_id))
     current_topic = topic['heading']
     topic_content = topic['content'] or 'No content available for this topic.'
-    topics = db.execute('SELECT heading FROM topics WHERE course_id = ? ORDER BY topic_index', (course_id,)).fetchall()
-    topics = [t['heading'] for t in topics]
+    cur.execute('SELECT heading FROM topics WHERE course_id = %s ORDER BY topic_index', (course_id,))
+    topics = [t['heading'] for t in cur.fetchall()]
     next_index = topic_index + 1 if topic_index + 1 < len(topics) else None
     if current_topic not in milestones:
         milestones.add(current_topic)
-        db.execute('UPDATE enrollments SET milestones = ? WHERE user_id = ? AND course_id = ?',
+        cur.execute('UPDATE enrollments SET milestones = %s WHERE user_id = %s AND course_id = %s',
                    (','.join(milestones), session['user_id'], course_id))
         db.commit()
+    cur.close()
     return render_template('topic.html', course=course, topic=current_topic, topic_content=topic_content,
                            topic_index=topic_index, next_index=next_index, milestones=milestones, course_id=course_id)
 
@@ -207,9 +237,15 @@ def enroll(course_id):
     if 'user_id' not in session or session['role'] != 'student':
         return redirect(url_for('index'))
     db = get_db()
-    db.execute('INSERT OR IGNORE INTO enrollments (user_id, course_id, milestones) VALUES (?, ?, ?)',
-               (session['user_id'], course_id, ''))
-    db.commit()
+    cur = db.cursor()
+    try:
+        cur.execute('INSERT INTO enrollments (user_id, course_id, milestones) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING',
+                   (session['user_id'], course_id, ''))
+        db.commit()
+    except psycopg2.Error:
+        db.rollback()
+    finally:
+        cur.close()
     return redirect(url_for('topic_page', course_id=course_id, topic_index=0))
 
 # Update course milestone
@@ -218,14 +254,16 @@ def update_milestone(course_id, milestone):
     if 'user_id' not in session or session['role'] != 'student':
         return redirect(url_for('index'))
     db = get_db()
-    enrollment = db.execute('SELECT milestones FROM enrollments WHERE user_id = ? AND course_id = ?',
-                            (session['user_id'], course_id)).fetchone()
-    milestones = set(enrollment['milestones'].split(',') if enrollment and enrollment['milestones'] else [])
+    cur = db.cursor()
+    cur.execute('SELECT milestones FROM enrollments WHERE user_id = %s AND course_id = %s', (session['user_id'], course_id))
+    enrollment = cur.fetchone()
+    milestones = set(enrollment[0].split(',') if enrollment and enrollment[0] else [])
     if milestone not in milestones:
         milestones.add(milestone)
-        db.execute('UPDATE enrollments SET milestones = ? WHERE user_id = ? AND course_id = ?',
+        cur.execute('UPDATE enrollments SET milestones = %s WHERE user_id = %s AND course_id = %s',
                    (','.join(milestones), session['user_id'], course_id))
         db.commit()
+    cur.close()
     return redirect(url_for('course_detail', course_id=course_id))
 
 # Submit course assignment
@@ -234,28 +272,34 @@ def assignment(course_id):
     if 'user_id' not in session or session['role'] != 'student':
         return redirect(url_for('index'))
     db = get_db()
-    course = db.execute('SELECT * FROM courses WHERE id = ?', (course_id,)).fetchone()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('SELECT * FROM courses WHERE id = %s', (course_id,))
+    course = cur.fetchone()
     if not course:
+        cur.close()
         flash('Course not found.', 'error')
         return redirect(url_for('student_dashboard'))
     if request.method == 'POST':
         submission = request.form['submission']
         try:
-            db.execute('INSERT INTO submissions (user_id, course_id, submission_text) VALUES (?, ?, ?)',
+            cur.execute('INSERT INTO submissions (user_id, course_id, submission_text) VALUES (%s, %s, %s)',
                        (session['user_id'], course_id, submission))
-            enrollment = db.execute('SELECT milestones FROM enrollments WHERE user_id = ? AND course_id = ?',
-                                    (session['user_id'], course_id)).fetchone()
+            cur.execute('SELECT milestones FROM enrollments WHERE user_id = %s AND course_id = %s',
+                                    (session['user_id'], course_id))
+            enrollment = cur.fetchone()
             milestones = set(enrollment['milestones'].split(',') if enrollment and enrollment['milestones'] else [])
             if 'Assignment Submitted' not in milestones:
                 milestones.add('Assignment Submitted')
-                db.execute('UPDATE enrollments SET milestones = ? WHERE user_id = ? AND course_id = ?',
+                cur.execute('UPDATE enrollments SET milestones = %s WHERE user_id = %s AND course_id = %s',
                            (','.join(milestones), session['user_id'], course_id))
             db.commit()
             flash('Assignment submitted for review!', 'success')
+            cur.close()
             return redirect(url_for('course_detail', course_id=course_id))
-        except sqlite3.Error:
+        except psycopg2.Error:
             db.rollback()
             flash('Failed to submit assignment.', 'error')
+    cur.close()
     return render_template('assignment.html', course_id=course_id, course=course)
 
 # Instructor dashboard
@@ -264,30 +308,35 @@ def instructor_dashboard():
     if 'user_id' not in session or session['role'] != 'instructor':
         return redirect(url_for('index'))
     db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         if 'submission_id' in request.form and 'feedback' in request.form and 'grade' in request.form:
             submission_id = request.form['submission_id']
             feedback = request.form['feedback']
             grade = request.form['grade']
             try:
-                db.execute('UPDATE submissions SET feedback = ?, graded_by = ?, grade = ? WHERE id = ?',
+                cur.execute('UPDATE submissions SET feedback = %s, graded_by = %s, grade = %s WHERE id = %s',
                            (feedback, session['user_id'], grade, submission_id))
                 db.commit()
                 flash('Feedback and grade submitted!', 'success')
-            except sqlite3.Error:
+            except psycopg2.Error:
                 db.rollback()
                 flash('Failed to submit feedback.', 'error')
-    user = db.execute('SELECT * FROM users WHERE id = ?', (session['user_id'],)).fetchone()
-    courses = db.execute('SELECT * FROM courses WHERE instructor_id = ?', (session['user_id'],)).fetchall()
-    submissions = db.execute('''
+    cur.execute('SELECT * FROM users WHERE id = %s', (session['user_id'],))
+    user = cur.fetchone()
+    cur.execute('SELECT * FROM courses WHERE instructor_id = %s', (session['user_id'],))
+    courses = cur.fetchall()
+    cur.execute('''
         SELECT s.id, s.user_id, s.course_id, s.submission_text, s.submitted_at, s.feedback, s.grade,
         u.firstname || ' ' || u.lastname AS student_name, c.title AS course_title
         FROM submissions s
         JOIN users u ON s.user_id = u.id
         JOIN courses c ON s.course_id = c.id
-        WHERE s.course_id IN (SELECT id FROM courses WHERE instructor_id = ?)
+        WHERE s.course_id IN (SELECT id FROM courses WHERE instructor_id = %s)
         AND s.feedback IS NULL
-    ''', (session['user_id'],)).fetchall()
+    ''', (session['user_id'],))
+    submissions = cur.fetchall()
+    cur.close()
     return render_template('instructor_dashboard.html', user=user, courses=courses, submissions=submissions)
 
 # Create a new course
@@ -318,17 +367,19 @@ def create_course():
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
                 video_path = os.path.join('uploads', unique_filename).replace('\\', '/')
         db = get_db()
+        cur = db.cursor()
         try:
-            db.execute('INSERT INTO courses (title, description, video_url, video_path, instructor_id, topics, image_path) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            cur.execute('INSERT INTO courses (title, description, video_url, video_path, instructor_id, topics, image_path) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id',
                        (title, description, None, video_path, instructor_id, topics, image_path))
-            course_id = db.execute('SELECT last_insert_rowid()').fetchone()[0]
+            course_id = cur.fetchone()[0]
             for index, topic in enumerate(topic_list):
-                db.execute('INSERT INTO topics (course_id, topic_index, heading, content) VALUES (?, ?, ?, ?)',
+                cur.execute('INSERT INTO topics (course_id, topic_index, heading, content) VALUES (%s, %s, %s, %s)',
                            (course_id, index, topic, ''))
             db.commit()
             flash('Course created successfully!', 'success')
+            cur.close()
             return redirect(url_for('instructor_dashboard'))
-        except sqlite3.Error:
+        except psycopg2.Error:
             db.rollback()
             flash('Failed to create course.', 'error')
     return render_template('create_course.html')
@@ -339,10 +390,12 @@ def manage_courses():
     if 'user_id' not in session or session['role'] != 'instructor':
         return redirect(url_for('index'))
     db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if request.method == 'POST':
         if 'delete_course' in request.form:
             course_id = request.form['delete_course']
-            course = db.execute('SELECT image_path, video_path FROM courses WHERE id = ?', (course_id,)).fetchone()
+            cur.execute('SELECT image_path, video_path FROM courses WHERE id = %s', (course_id,))
+            course = cur.fetchone()
             if course and course['image_path']:
                 try:
                     os.remove(os.path.join('static', course['image_path']))
@@ -353,8 +406,8 @@ def manage_courses():
                     os.remove(os.path.join('static', course['video_path']))
                 except OSError:
                     pass
-            db.execute('DELETE FROM courses WHERE id = ? AND instructor_id = ?', (course_id, session['user_id']))
-            db.execute('DELETE FROM topics WHERE course_id = ?', (course_id,))
+            cur.execute('DELETE FROM courses WHERE id = %s AND instructor_id = %s', (course_id, session['user_id']))
+            cur.execute('DELETE FROM topics WHERE course_id = %s', (course_id,))
             db.commit()
             flash('Course deleted!', 'success')
         elif 'title' in request.form:
@@ -373,7 +426,8 @@ def manage_courses():
                     unique_filename = f"{secrets.token_hex(8)}_{filename}"
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
                     image_path = os.path.join('uploads', unique_filename).replace('\\', '/')
-                    old_course = db.execute('SELECT image_path FROM courses WHERE id = ?', (course_id,)).fetchone()
+                    cur.execute('SELECT image_path FROM courses WHERE id = %s', (course_id,))
+                    old_course = cur.fetchone()
                     if old_course and old_course['image_path']:
                         try:
                             os.remove(os.path.join('static', old_course['image_path']))
@@ -386,34 +440,37 @@ def manage_courses():
                     unique_filename = f"{secrets.token_hex(8)}_{filename}"
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
                     video_path = os.path.join('uploads', unique_filename).replace('\\', '/')
-                    old_course = db.execute('SELECT video_path FROM courses WHERE id = ?', (course_id,)).fetchone()
+                    cur.execute('SELECT video_path FROM courses WHERE id = %s', (course_id,))
+                    old_course = cur.fetchone()
                     if old_course and old_course['video_path']:
                         try:
                             os.remove(os.path.join('static', old_course['video_path']))
                         except OSError:
                             pass
             try:
-                update_query = 'UPDATE courses SET title = ?, description = ?, video_url = ?, instructor_id = ?, topics = ?'
+                update_query = 'UPDATE courses SET title = %s, description = %s, video_url = %s, instructor_id = %s, topics = %s'
                 params = [title, description, None, instructor_id, topics]
                 if image_path:
-                    update_query += ', image_path = ?'
+                    update_query += ', image_path = %s'
                     params.append(image_path)
                 if video_path:
-                    update_query += ', video_path = ?'
+                    update_query += ', video_path = %s'
                     params.append(video_path)
-                update_query += ' WHERE id = ?'
+                update_query += ' WHERE id = %s'
                 params.append(course_id)
-                db.execute(update_query, params)
-                db.execute('DELETE FROM topics WHERE course_id = ?', (course_id,))
+                cur.execute(update_query, params)
+                cur.execute('DELETE FROM topics WHERE course_id = %s', (course_id,))
                 for index, topic in enumerate(topic_list):
-                    db.execute('INSERT INTO topics (course_id, topic_index, heading, content) VALUES (?, ?, ?, ?)',
+                    cur.execute('INSERT INTO topics (course_id, topic_index, heading, content) VALUES (%s, %s, %s, %s)',
                                (course_id, index, topic, ''))
                 db.commit()
                 flash('Course updated!', 'success')
-            except sqlite3.Error:
+            except psycopg2.Error:
                 db.rollback()
                 flash('Failed to update course.', 'error')
-    courses = db.execute('SELECT * FROM courses WHERE instructor_id = ?', (session['user_id'],)).fetchall()
+    cur.execute('SELECT * FROM courses WHERE instructor_id = %s', (session['user_id'],))
+    courses = cur.fetchall()
+    cur.close()
     return render_template('manage_courses.html', courses=courses)
 
 # Manage course topics
@@ -423,13 +480,16 @@ def manage_topics(course_id=None):
     if 'user_id' not in session or session['role'] != 'instructor':
         return redirect(url_for('index'))
     db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
     if course_id is None:
-        courses = db.execute('SELECT * FROM courses WHERE instructor_id = ?', (session['user_id'],)).fetchall()
+        cur.execute('SELECT * FROM courses WHERE instructor_id = %s', (session['user_id'],))
+        courses = cur.fetchall()
+        cur.close()
         return render_template('select_course_for_topics.html', courses=courses)
     else:
-        topics = db.execute('SELECT t.id, t.course_id, t.topic_index, t.heading, t.content, c.title AS course_title '
-                            'FROM topics t JOIN courses c ON t.course_id = c.id WHERE t.course_id = ? AND c.instructor_id = ?',
-                            (course_id, session['user_id'])).fetchall()
+        cur.execute('SELECT t.id, t.course_id, t.topic_index, t.heading, t.content, c.title AS course_title FROM topics t JOIN courses c ON t.course_id = c.id WHERE t.course_id = %s AND c.instructor_id = %s', (course_id, session['user_id']))
+        topics = cur.fetchall()
+        cur.close()
         if not topics:
             flash('Topic not found or you do not have permission.', 'error')
             return redirect(url_for('manage_topics'))
@@ -441,21 +501,26 @@ def edit_topic(topic_id):
     if 'user_id' not in session or session['role'] != 'instructor':
         return redirect(url_for('index'))
     db = get_db()
-    topic = db.execute('SELECT t.*, c.title AS course_title FROM topics t JOIN courses c ON t.course_id = c.id WHERE t.id = ? AND c.instructor_id = ?',
-                       (topic_id, session['user_id'])).fetchone()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute('SELECT t.*, c.title AS course_title FROM topics t JOIN courses c ON t.course_id = c.id WHERE t.id = %s AND c.instructor_id = %s',
+                       (topic_id, session['user_id']))
+    topic = cur.fetchone()
     if not topic:
+        cur.close()
         flash('Topic not found or you do not have permission.', 'error')
         return redirect(url_for('manage_topics'))
     if request.method == 'POST':
         content = request.form['content']
         try:
-            db.execute('UPDATE topics SET content = ? WHERE id = ?', (content, topic_id))
+            cur.execute('UPDATE topics SET content = %s WHERE id = %s', (content, topic_id))
             db.commit()
             flash('Topic content updated!', 'success')
+            cur.close()
             return redirect(url_for('manage_topics', course_id=topic['course_id']))
-        except sqlite3.Error:
+        except psycopg2.Error:
             db.rollback()
             flash('Failed to update topic content.', 'error')
+    cur.close()
     return render_template('edit_topic.html', topic=topic)
 
 # Run app

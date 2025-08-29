@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %} Eduverse{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css')  }}">
+    {% block extra_css %}{% endblock %}
+    {% block head %}{% endblock %}
+</head>
+<body>
+<main>
+{% block content %}
+{% endblock %}
+
+</main>
+
+<script>
+            document.querySelectorAll('.eye').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const input = btn.parentElement.querySelector('input');
+                input.type = input.type === 'password' ? 'text' : 'password';
+                btn.textContent = input.type === 'password' ? '👁' : '🙈';
+            });
+        });
+</script>
+   {% block extra_js %}{% endblock %}
+</body>
+</html>

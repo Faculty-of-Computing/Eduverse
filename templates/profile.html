@@ -1,28 +1,6 @@
-<!-- templates/profile.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile | Eduverse</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-  <div class="container">
-    <!-- Sidebar -->
-    <nav class="sidebar" aria-label="Sidebar navigation">
-      <a href="{{ url_for('student_dashboard') if session.get('role') == 'student' else url_for('instructor_dashboard') }}">
-        Dashboard
-      </a>
-      <a href="{{ url_for('profile') }}" class="active">Profile</a>
-      {% if session.get('role') == 'student' %}
-        <a href="{{ url_for('courses') }}">Courses</a>
-        <a href="{{ url_for('submissions') }}">Submissions</a>
-      {% endif %}
-      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </nav>
-
-    <!-- Profile Card -->
+{% extends 'base_dash.html' %}
+{% block title %}Create Course | Eduverse{% endblock %}
+{% block content %}
     <article class="profile-card" aria-labelledby="profile-header">
       <header class="profile-header">
         <div class="avatar" aria-hidden="true">
@@ -39,6 +17,4 @@
         <p><strong>Role:</strong> {{ user['role']|capitalize }}</p>
       </div>
     </article>
-  </div>
-</body>
-</html>
+{% endblock %}

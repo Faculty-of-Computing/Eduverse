@@ -1,4 +1,35 @@
-venv
+# Python cache and compiled files
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+ENV/
+env/
+
+# Database files (if using SQLite)
 *.db
-*.sqlite3
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploaded files
+static/uploads/
+
+# Environment variables
+.env
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# Jupyter Notebooks checkpoints
+.ipynb_checkpoints/
 

@@ -1,23 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Course for Topics | Eduverse</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <div class="container">
-        <!-- Sidebar -->
-        <nav class="sidebar" aria-label="Sidebar navigation">
-            <a href="{{ url_for('instructor_dashboard') }}">Dashboard</a>
-            <a href="{{ url_for('manage_courses') }}">Manage Courses</a>
-            <a href="{{ url_for('manage_topics') }}" class="active">Manage Topics</a>
-            <a href="{{ url_for('profile') }}">Profile</a>
-            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-        </nav>
-
-        <!-- Main Content -->
+{% extends 'base_dash.html' %}
+{% block title %}Select Course for Topics | Eduverse{% endblock %}
+{% block content %}
         <section class="dashboard-card" aria-labelledby="courses-title">
             <h2 id="courses-title" class="card-title">Select Course to Manage Topics</h2>
 
@@ -36,6 +19,4 @@
             </p>
             {% endif %}
         </section>
-    </div>
-</body>
-</html>
+{% endblock %}

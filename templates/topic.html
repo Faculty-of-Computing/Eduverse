@@ -1,26 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>{% block title %}{{ topic }} - {{ course.title }} | Eduverse{% endblock %}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-
-</head>
-<body>
-<div class="container">
-    <nav class="sidebar" aria-label="Sidebar navigation">
-      <a href="{{ url_for('student_dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('profile') }}">Profile</a>
-      <a href="{{ url_for('courses') }}" class="active">My Courses</a>
-      <a href="{{ url_for('submissions') }}">Submissions</a>
-      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </nav>
-
+<!-- topic.html -->
+{% extends 'base_dash.html' %}
+{% block title %}{{ topic }} - {{ course.title }} | Eduverse {% endblock %}
+{% block content %}
 <section class="dashboard-card" aria-labelledby="topic-title">
   {% if course %}
     <h2 id="topic-title" class="card-title">{{ course.title }} - {{ topic }}</h2>
-    <div class="topic-content">
+    <div class="topic-content" aria-live="polite">
       {{ topic_content | safe }}
     </div>
     {% if next_index is not none %}
@@ -32,11 +17,9 @@
   {% else %}
     <h2 class="card-title">Error</h2>
     <p class="card-text">Course data is unavailable.
-      <a href="{{ url_for('course_detail', course_id=course_id) }}">Return to Course</a>
+      <a href="{{ url_for('course_detail', course_id=course_id) }}">Return to Course</a> or 
+      <a href="{{ url_for('courses') }}">Go to Courses</a>
     </p>
   {% endif %}
 </section>
-</div>
-
-</body>
-</html>
+{% endblock %}

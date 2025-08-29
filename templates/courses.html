@@ -1,29 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Available Courses | Eduverse</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-  <div class="container">
-    <!-- Sidebar -->
-    <nav class="sidebar" aria-label="Sidebar navigation">
-      <a href="{{ url_for('student_dashboard') }}" class="active">Dashboard</a>
-      <a href="{{ url_for('profile') }}">Profile</a>
-      <a href="{{ url_for('courses') }}">Courses</a>
-      <a href="{{ url_for('submissions') }}">Submissions</a>
-      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </nav>
-
-    <!-- Main content -->
+<!-- courses.html -->
+{% extends 'base_dash.html' %}
+{% block title %}Available Courses| Eduverse{% endblock %}
+{% block content %}
     <main class="dashboard-card">
       <h2 id="courses-title" class="card-title">Available Courses</h2>
 
       <div class="course-grid" role="list">
         {% for course in courses %}
-        <article class="course-card" role="listitem">
+        <article class="course-card" role="article">
           <h3 class="course-title">{{ course.title }}</h3>
 
           {% if course.image_path %}
@@ -49,5 +33,4 @@
         {% endfor %}
       </div>
     </main>
-  </div>
-</body>
+{% endblock %}

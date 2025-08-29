@@ -1,24 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manage Courses | Eduverse</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-
-</head>
-<body>
-<div class="container">
-  <!-- Sidebar -->
-  <nav class="sidebar" aria-label="Sidebar navigation">
-    <a href="{{ url_for('instructor_dashboard') }}">Dashboard</a>
-    <a href="{{ url_for('manage_courses') }}" class="active">Manage Courses</a>
-    <a href="{{ url_for('manage_topics') }}">Manage Topics</a>
-    <a href="{{ url_for('profile') }}">Profile</a>
-    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-  </nav>
-
-  <!-- Main content -->
+<!-- manage_courses.html -->
+{% extends 'base_dash.html' %}
+{% block title %} manage courses | Eduverse {% endblock %}
+{% block content %}
   <section class="dashboard-card course-form" aria-labelledby="manage-title">
     <h2 id="manage-title" class="card-title">Manage Courses</h2>
 
@@ -63,7 +46,10 @@
           <div class="course-actions">
             <button type="submit" class="btn btn-primary">Update</button>
             <button type="submit" name="delete_course" value="{{ course.id }}" class="btn btn-danger"
-              onclick="return confirm('Are you sure you want to delete this course?');">
+              onclick="function confirm(areYouSureYouWantToDeleteThisCourse) {
+              return undefined;
+              }
+              return confirm('Are you sure you want to delete this course?');">
               Delete
             </button>
           </div>
@@ -74,6 +60,4 @@
       <p>No courses available. <a href="{{ url_for('create_course') }}">Create a new course</a>.</p>
     {% endif %}
   </section>
-</div>
-</body>
-</html>
+{% endblock %}

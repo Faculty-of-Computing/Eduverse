@@ -1,35 +1,15 @@
 <!-- assignment.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Submit Assignment | Eduverse</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-<div class="container">
-<nav class="sidebar" aria-label="Sidebar navigation">
-        <a href="{{ url_for('student_dashboard') }}" class="active">Dashboard</a>
-      <a href="{{ url_for('profile') }}">Profile</a>
-      <a href="{{ url_for('courses') }}">My Courses</a>
-      <a href="{{ url_for('submissions') }}">Submissions</a>
-      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </nav>
-  <main>
-    <section class="dashboard-card" aria-labelledby="assignment-title">
-      <h2 id="assignment-title" class="card-title">
-        Submit Assignment for {% if course %}{{ course.title }}{% else %}Unknown Course{% endif %}
-      </h2>
-      <form method="POST" action="{{ url_for('assignment', course_id=course_id) }}">
-        <div class="form-group">
-          <label for="submission" class="form-label">Submission</label>
-          <textarea class="form-control" id="submission" name="submission" rows="4" required aria-required="true" placeholder="Enter your assignment here..."></textarea>
-        </div>
-        <button type="submit" class="btn-primary">Submit for Review</button>
-      </form>
-    </section>
-  </main>
-</div>
-</body>
-</html>
+{% extends 'base_dash.html' %}
+{% block title %}Submit Assignment | Eduverse{% endblock %}
+{% block content %}
+<section class="dashboard-card" aria-labelledby="assignment-title">
+  <h2 id="assignment-title" class="card-title">Submit Assignment for {% if course %}{{ course.title }}{% else %}Unknown Course{% endif %}</h2>
+  <form method="POST" action="{{ url_for('assignment', course_id=course_id) }}">
+    <div class="form-group">
+      <label for="submission" class="form-label">Submission</label>
+      <textarea class="form-control" id="submission" name="submission" rows="4" required aria-required="true" placeholder="Enter your assignment here..."></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit for Review</button>
+  </form>
+</section>
+{% endblock %}

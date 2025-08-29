@@ -1,78 +1,88 @@
-import sqlite3
+import psycopg2
+import psycopg2.extras
 from flask import g
+import os
 
-DATABASE = "database.db"
+# Database configuration (use environment variables for security)
+DATABASE = {
+    "dbname": "eduverse",
+    "user": "postgres",
+    "password": "kemfon",
+    "host": "localhost",
+    "port": 5432
+}
+
 
 def init_db():
-    with sqlite3.connect(DATABASE, timeout=10, check_same_thread=False) as conn:
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
+    """Initialize the PostgreSQL database with required tables"""
+    conn = psycopg2.connect(**DATABASE)
+    cur = conn.cursor()
 
-        # Enable WAL for concurrency
-        c.execute("PRAGMA journal_mode=WAL;")
+    # Users table
+    cur.execute('''CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        firstname VARCHAR(100),
+        lastname VARCHAR(100),
+        email VARCHAR(255) UNIQUE,
+        password TEXT,
+        role VARCHAR(50)
+    )''')
 
-        c.execute('''CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            firstname TEXT,
-            lastname TEXT,
-            email TEXT UNIQUE,
-            password TEXT,
-            role TEXT
-        )''')
+    # Courses table
+    cur.execute('''CREATE TABLE IF NOT EXISTS courses (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        video_url TEXT,
+        video_path TEXT, 
+        instructor_id INTEGER REFERENCES users(id),
+        topics TEXT,
+        image_path TEXT
+    )''')
 
-        c.execute('''CREATE TABLE IF NOT EXISTS courses (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            description TEXT,
-            video_url TEXT,
-            video_path TEXT, 
-            instructor_id INTEGER,
-            topics TEXT,
-            image_path TEXT,
-            FOREIGN KEY (instructor_id) REFERENCES users(id)
-        )''')
+    # Enrollments table
+    cur.execute('''CREATE TABLE IF NOT EXISTS enrollments (
+        user_id INTEGER REFERENCES users(id),
+        course_id INTEGER REFERENCES courses(id),
+        milestones TEXT,
+        PRIMARY KEY (user_id, course_id)
+    )''')
 
-        c.execute('''CREATE TABLE IF NOT EXISTS enrollments (
-            user_id INTEGER,
-            course_id INTEGER,
-            milestones TEXT,
-            PRIMARY KEY (user_id, course_id)
-        )''')
+    # Submissions table
+    cur.execute('''CREATE TABLE IF NOT EXISTS submissions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        course_id INTEGER REFERENCES courses(id),
+        submission_text TEXT,
+        submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        feedback TEXT,
+        graded_by INTEGER REFERENCES users(id),
+        grade INTEGER
+    )''')
 
-        c.execute('''CREATE TABLE IF NOT EXISTS submissions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            course_id INTEGER,
-            submission_text TEXT,
-            submitted_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            feedback TEXT,
-            graded_by INTEGER,
-            grade INTEGER
-        )''')
+    # Topics table
+    cur.execute('''CREATE TABLE IF NOT EXISTS topics (
+        id SERIAL PRIMARY KEY,
+        course_id INTEGER REFERENCES courses(id),
+        topic_index INTEGER,
+        heading VARCHAR(255),
+        content TEXT
+    )''')
 
-        c.execute('''CREATE TABLE IF NOT EXISTS topics (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            course_id INTEGER,
-            topic_index INTEGER,
-            heading TEXT,
-            content TEXT,
-            FOREIGN KEY (course_id) REFERENCES courses(id)
-        )''')
-
-        conn.commit()
+    conn.commit()
+    cur.close()
+    conn.close()
 
 
 def get_db():
-    """Get a database connection for the current request"""
+    """Get a PostgreSQL connection for the current request"""
     if "db" not in g:
-        g.db = sqlite3.connect(DATABASE, timeout=10, check_same_thread=False)
-        g.db.row_factory = sqlite3.Row
+        g.db = psycopg2.connect(**DATABASE, cursor_factory=psycopg2.extras.DictCursor)
     return g.db
 
 
 def close_db(e=None):
     """Close the database connection at the end of a request"""
     db = g.pop("db", None)
-
     if db is not None:
         db.close()

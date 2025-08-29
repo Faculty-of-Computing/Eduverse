@@ -1,22 +1,7 @@
 <!-- student_dashboard.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Dashboard | Eduverse</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-  <div class="container">
-    <nav class="sidebar" aria-label="Sidebar navigation">
-      <a href="{{ url_for('student_dashboard') }}" class="active">Dashboard</a>
-      <a href="{{ url_for('profile') }}">Profile</a>
-      <a href="{{ url_for('courses') }}">Courses</a>
-      <a href="{{ url_for('submissions') }}">Submissions</a>
-      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </nav>
-
+{% extends 'base_dash.html' %}
+{% block title %}Student dashboard | Eduverse{% endblock %}
+{% block content %}
     <article class="profile-card" aria-labelledby="dashboard-header">
       <header class="profile-header">
         <div class="avatar" aria-hidden="true">{{ user.firstname[0]|upper }}</div>
@@ -29,8 +14,8 @@
       <div class="profile-info">
         <p><strong>Email:</strong> {{ user.email }}</p>
         <p><strong>Role:</strong> {{ user.role|capitalize }}</p>
-        <p><strong>Member Since:</strong> {{ user.joined_at | datetimeformat or 'Now' }}</p>
       </div>
+    <br>
 
       <h2 class="card-title">Your Enrolled Courses</h2>
 
@@ -64,8 +49,8 @@
       </p>
       {% endif %}
     </article>
-  </div>
 
+{% block extra_js %}
   <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-</body>
-</html>
+{% endblock %}
+{% endblock %}

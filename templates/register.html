@@ -1,15 +1,8 @@
 <!-- register.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Create Account — Eduverse</title> <!-- Changed to Eduverse -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
+{% extends 'base_forms.html' %}
+{% block title %} Create Account | Eduverse {% endblock %}
 
-</head>
-<body>
+{% block content %}
    <div class="inner">
         <div class="left-scene">
             <img src="{{ url_for('static', filename='images/man.jpg') }}" class="scene-img" alt="Illustration of a person at a desk">
@@ -61,14 +54,5 @@
             </div>
         </div>
     </div>
-    <script>
-        document.querySelectorAll('.eye').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const input = btn.parentElement.querySelector('input');
-                input.type = input.type === 'password' ? 'text' : 'password';
-                btn.textContent = input.type === 'password' ? '👁' : '🙈';
-            });
-        });
-    </script>
-</body>
-</html>
+
+{% endblock %}

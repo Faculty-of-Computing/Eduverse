@@ -1,21 +1,7 @@
 <!-- submissions.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Submissions | Eduverse</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-<div class="container">
-<nav class="sidebar" aria-label="Sidebar navigation">
-        <a href="{{ url_for('student_dashboard') }}" class="active">Dashboard</a>
-      <a href="{{ url_for('profile') }}">Profile</a>
-      <a href="{{ url_for('courses') }}">Courses</a>
-      <a href="{{ url_for('submissions') }}">Submissions</a>
-      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
-    </nav>
+{% extends 'base_dash.html' %}
+{% block title %}Edit Topic: Your Submissions | Eduverse{% endblock %}
+{% block content %}
   <section class="dashboard-card" aria-labelledby="submissions-title">
     <h2 id="submissions-title" class="card-title">Your Assignment Submissions</h2>
 
@@ -42,6 +28,4 @@
     <p class="card-text">You have not submitted any assignments yet.</p>
     {% endif %}
   </section>
-</div>
-</body>
-</html>
+{% endblock %}

@@ -5,7 +5,7 @@
 
 # 📚 EduVerse
 
-EduVerse is an online platform designed to give students access to academic resources, learning tools. It provides a centralized space for learning, assignments and course-specific information.
+EduVerse is an online platform designed to give students access to academic resources and learning tools. It provides a centralized space for learning, assignments and course-specific information.
 
 ---
 
@@ -23,7 +23,7 @@ EduVerse is an online platform designed to give students access to academic reso
 
 * **Frontend:** HTML, CSS, JavaScript, flask templating
 * **Backend:** Flask (Python)
-* **Database:** SQLite
+* **Database:**  Postgres
 
 
 ---

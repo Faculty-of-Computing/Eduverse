@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}Eduverse{% endblock %}</title>
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header class="navbar" role="banner">
+        <div class="logo">Eduverse</div>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+            <ul class="nav-links" id="navMenu" role="navigation">
+
+
+    {% if session.get('user_id') %}
+        {% if session.get('role') == 'student' %}
+            <li><a href="{{ url_for('student_dashboard') }}" class="nav-link">Dashboard</a></li>
+            <li><a href="{{ url_for('courses') }}" class="nav-link">Courses</a></li>
+            <li><a href="{{ url_for('profile') }}" class="nav-link">Profile</a></li>
+        {% elif session.get('role') == 'instructor' %}
+            <li><a href="{{ url_for('instructor_dashboard') }}" class="nav-link">Dashboard</a></li>
+            <li><a href="{{ url_for('manage_courses') }}" class="nav-link">Manage Courses</a></li>
+            <li><a href="{{ url_for('manage_topics') }}" class="nav-link">Manage Topics</a></li>
+            <li><a href="{{ url_for('profile') }}" class="nav-link">Profile</a></li>
+        {% endif %}
+        <!-- Logout only when logged in -->
+        <li><a href="{{ url_for('logout') }}" class="nav-link logout-btn">Logout</a></li>
+    {% else %}
+        <!-- Login/Register only when NOT logged in -->
+        <li><a href="{{ url_for('login') }}" class="nav-link">Log In</a></li>
+        <li><a href="{{ url_for('register') }}" class="nav-link">Register</a></li>
+    {% endif %}
+</ul>
+
+
+    </header>
