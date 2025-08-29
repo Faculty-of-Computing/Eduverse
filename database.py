@@ -3,14 +3,29 @@ import psycopg2.extras
 from flask import g
 import os
 
-# Database configuration (use environment variables for security)
-DATABASE = {
-    "dbname": "eduverse",
-    "user": "postgres",
-    "password": "kemfon",
-    "host": "localhost",
-    "port": 5432
-}
+
+# Database configuration: use Render DATABASE_URL if available, else local settings
+RENDER_DATABASE_URL = os.getenv("RENDER_DATABASE_URL")
+if RENDER_DATABASE_URL:
+    # Parse the Render DATABASE_URL
+    import urllib.parse as urlparse
+    urlparse.uses_netloc.append("postgres")
+    url = urlparse.urlparse(RENDER_DATABASE_URL)
+    DATABASE = {
+        "dbname": url.path[1:],
+        "user": url.username,
+        "password": url.password,
+        "host": url.hostname,
+        "port": url.port
+    }
+else:
+    DATABASE = {
+        "dbname": os.getenv("POSTGRES_DB", "eduverse"),
+        "user": os.getenv("POSTGRES_USER", "postgres"),
+        "password": os.getenv("POSTGRES_PASSWORD"),
+        "host": os.getenv("POSTGRES_HOST", "localhost"),
+        "port": int(os.getenv("POSTGRES_PORT", 5432))
+    }
 
 
 def init_db():
