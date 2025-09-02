@@ -13,11 +13,12 @@ if RENDER_DATABASE_URL:
     urlparse.uses_netloc.append("postgres")
     url = urlparse.urlparse(RENDER_DATABASE_URL)
     env = {
-        "dbname": url.path[1:],
-        "user": url.username,
-        "password": url.password,
-        "host": url.hostname,
-        "port": url.port
+        "dbname": "eduverse_bl6a",
+        "user": "eduverse_bl6a_user",
+        "password": "fMGTDzHwIHMuPhKL3371tis8iEzi6XNj",
+        "host": "dpg-d2ra9ngdl3ps73ctlue0-a.oregon-postgres.render.com",
+        "port": 5432
+
     }
 else:
     env = {
