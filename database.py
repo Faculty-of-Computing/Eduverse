@@ -1,39 +1,15 @@
-from dotenv import load_dotenv
-load_dotenv()
 import psycopg2
 import psycopg2.extras
 from flask import g
 import os
-import urllib.parse as urlparse
 
-
-DATABASE_URL = os.getenv("DATABASE_URL") or os.getenv("RENDER_DATABASE_URL")
-
-if DATABASE_URL:
-    urlparse.uses_netloc.append("postgres")
-    url = urlparse.urlparse(DATABASE_URL)
-    env = {
-        "dbname": url.path[1:],
-        "user": url.username,
-        "password": url.password,
-        "host": url.hostname,
-        "port": url.port or 5432,
-    }
-else:
-    env = {
-        "dbname": os.getenv("POSTGRES_DB"),
-        "user": os.getenv("POSTGRES_USER"),
-        "password": os.getenv("POSTGRES_PASSWORD"),
-        "host": os.getenv("POSTGRES_HOST", "localhost"),
-        "port": os.getenv("POSTGRES_PORT", 5432),
-    }
+RENDER_DB = os.getenv("RENDER_DATABASE_URL")
+LOCAL_DB = os.getenv("LOCAL_DATABASE_URL")
 
 
 def get_db_connection():
-    missing = [k for k, v in env.items() if not v]
-    if missing:
-        raise EnvironmentError(f"Missing PostgreSQL env variables: {missing}")
-    return psycopg2.connect(**env)
+    db_url = RENDER_DB or LOCAL_DB
+    return psycopg2.connect(db_url, cursor_factory=psycopg2.extras.DictCursor)
 
 
 def init_db():
@@ -93,7 +69,7 @@ def init_db():
 
 def get_db():
     if "db" not in g:
-        g.db = psycopg2.connect(**env, cursor_factory=psycopg2.extras.DictCursor)
+        g.db = get_db_connection()
     return g.db
 
 
