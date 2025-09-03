@@ -4,7 +4,16 @@
 {% block content %}
   <section class="dashboard-card course-form" aria-labelledby="manage-title">
     <h2 id="manage-title" class="card-title">Manage Courses</h2>
-
+                    <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{category}}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
     {% if courses %}
       {% for course in courses %}
       <article class="course-card">

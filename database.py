@@ -11,9 +11,9 @@ render_env = {
 }
 
 local_env = {
-    "dbname": "postgres",
+    "dbname": "eduverse",
     "user": "postgres",
-    "password": "password",
+    "password": "kemfon",
     "host": "localhost",
     "port": 5432
 }

@@ -4,7 +4,16 @@
 {% block content %}
   <article class="profile-card" aria-labelledby="create-title">
     <h2 id="create-title" class="card-title">Create New Course</h2> 
-    
+                    <div class="flash-messages">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{category}}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
     <form method="POST" enctype="multipart/form-data" action="{{ url_for('create_course') }}">
       <div class="form-group">
         <label for="title" class="form-label">Course Title</label>
