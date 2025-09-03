@@ -389,27 +389,49 @@ def create_course():
 def manage_courses():
     if 'user_id' not in session or session['role'] != 'instructor':
         return redirect(url_for('index'))
+
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
     if request.method == 'POST':
         if 'delete_course' in request.form:
             course_id = request.form['delete_course']
+
+            # Get image and video paths for cleanup
             cur.execute('SELECT image_path, video_path FROM courses WHERE id = %s', (course_id,))
             course = cur.fetchone()
+
             if course and course['image_path']:
                 try:
                     os.remove(os.path.join('static', course['image_path']))
                 except OSError:
                     pass
+
             if course and course['video_path']:
                 try:
                     os.remove(os.path.join('static', course['video_path']))
                 except OSError:
                     pass
-            cur.execute('DELETE FROM courses WHERE id = %s AND instructor_id = %s', (course_id, session['user_id']))
-            cur.execute('DELETE FROM topics WHERE course_id = %s', (course_id,))
-            db.commit()
-            flash('Course deleted!', 'success')
+
+            try:
+                # ✅ Delete enrollments first (fix for foreign key violation)
+                cur.execute('DELETE FROM enrollments WHERE course_id = %s', (course_id,))
+
+                # Delete topics
+                cur.execute('DELETE FROM topics WHERE course_id = %s', (course_id,))
+
+                # Finally delete the course itself
+                cur.execute(
+                    'DELETE FROM courses WHERE id = %s AND instructor_id = %s',
+                    (course_id, session['user_id'])
+                )
+
+                db.commit()
+                flash('Course deleted!', 'success')
+            except psycopg2.Error:
+                db.rollback()
+                flash('Failed to delete course.', 'error')
+
         elif 'title' in request.form:
             title = request.form['title']
             description = request.form['description']
@@ -417,8 +439,10 @@ def manage_courses():
             course_id = request.form.get('course_id')
             instructor_id = session['user_id']
             topic_list = [t.strip() for t in topics.split(',') if t.strip()]
+
             image_path = None
             video_path = None
+
             if 'image' in request.files:
                 file = request.files['image']
                 if file and allowed_file(file.filename):
@@ -426,6 +450,8 @@ def manage_courses():
                     unique_filename = f"{secrets.token_hex(8)}_{filename}"
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
                     image_path = os.path.join('uploads', unique_filename).replace('\\', '/')
+
+                    # Remove old image
                     cur.execute('SELECT image_path FROM courses WHERE id = %s', (course_id,))
                     old_course = cur.fetchone()
                     if old_course and old_course['image_path']:
@@ -433,6 +459,7 @@ def manage_courses():
                             os.remove(os.path.join('static', old_course['image_path']))
                         except OSError:
                             pass
+
             if 'video' in request.files:
                 file = request.files['video']
                 if file and allowed_file(file.filename):
@@ -440,6 +467,8 @@ def manage_courses():
                     unique_filename = f"{secrets.token_hex(8)}_{filename}"
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
                     video_path = os.path.join('uploads', unique_filename).replace('\\', '/')
+
+                    # Remove old video
                     cur.execute('SELECT video_path FROM courses WHERE id = %s', (course_id,))
                     old_course = cur.fetchone()
                     if old_course and old_course['video_path']:
@@ -447,27 +476,40 @@ def manage_courses():
                             os.remove(os.path.join('static', old_course['video_path']))
                         except OSError:
                             pass
+
             try:
-                update_query = 'UPDATE courses SET title = %s, description = %s, video_url = %s, instructor_id = %s, topics = %s'
+                update_query = '''
+                    UPDATE courses 
+                    SET title = %s, description = %s, video_url = %s, instructor_id = %s, topics = %s
+                '''
                 params = [title, description, None, instructor_id, topics]
+
                 if image_path:
                     update_query += ', image_path = %s'
                     params.append(image_path)
                 if video_path:
                     update_query += ', video_path = %s'
                     params.append(video_path)
+
                 update_query += ' WHERE id = %s'
                 params.append(course_id)
+
                 cur.execute(update_query, params)
+
+                # Reset topics
                 cur.execute('DELETE FROM topics WHERE course_id = %s', (course_id,))
                 for index, topic in enumerate(topic_list):
-                    cur.execute('INSERT INTO topics (course_id, topic_index, heading, content) VALUES (%s, %s, %s, %s)',
-                               (course_id, index, topic, ''))
+                    cur.execute(
+                        'INSERT INTO topics (course_id, topic_index, heading, content) VALUES (%s, %s, %s, %s)',
+                        (course_id, index, topic, '')
+                    )
+
                 db.commit()
                 flash('Course updated!', 'success')
             except psycopg2.Error:
                 db.rollback()
                 flash('Failed to update course.', 'error')
+
     cur.execute('SELECT * FROM courses WHERE instructor_id = %s', (session['user_id'],))
     courses = cur.fetchall()
     cur.close()
