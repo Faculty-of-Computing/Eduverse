@@ -1,44 +1,56 @@
-<!-- create_courses.html -->
+<!-- create_course.html -->
 {% extends 'base_dash.html' %}
 {% block title %}Create Course | Eduverse{% endblock %}
+
 {% block content %}
-  <article class="profile-card" aria-labelledby="create-title">
-    <h2 id="create-title" class="card-title">Create New Course</h2> 
-                    <div class="flash-messages">
+<article class="profile-card" aria-labelledby="create-title">
+  <h2 id="create-title" class="card-title">Create New Course</h2>
+
+  <!-- Flash Messages -->
+  <div class="flash-messages">
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
+      {% if messages %}
         {% for category, message in messages %}
-            <div class="alert alert-{{category}}" role="alert">
-                {{ message }}
-            </div>
+          <div class="alert alert-{{ category }}" role="alert">
+            {{ message }}
+          </div>
         {% endfor %}
-    {% endif %}
+      {% endif %}
     {% endwith %}
-    <form method="POST" enctype="multipart/form-data" action="{{ url_for('create_course') }}">
-      <div class="form-group">
-        <label for="title" class="form-label">Course Title</label>
-        <input type="text" id="title" name="title" class="form-control" required aria-required="true">
-      </div>
-      <div class="form-group">
-        <label for="description" class="form-label">Description</label>
-        <textarea id="description" name="description" class="form-control" rows="4" required aria-required="true"></textarea>
-      </div>
-      <div class="form-group">
-        <label for="image" class="form-label">Course Thumbnail</label>
-        <input type="file" id="image" name="image" class="form-control" accept="image/*">
-      </div>
-      <div class="form-group">
-        <label for="video" class="form-label">Course Video</label>
-        <input type="file" id="video" name="video" class="form-control" accept="video/mp4,video/webm">
-      </div>
-      <div class="form-group">
-        <label for="topics" class="form-label">Topics (comma-separated)</label>
-        <input type="text" id="topics" name="topics" class="form-control" placeholder="Topic1, Topic2, ...">
-      </div>
-      <button type="submit" class="btn btn-primary">Create Course</button>
-    </form>
-  </article>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" action="{{ url_for('create_course') }}">
+    <div class="form-group">
+      <label for="title" class="form-label">Course Title</label>
+      <input type="text" id="title" name="title" class="form-control" required aria-required="true" placeholder="Enter course title">
+    </div>
+
+    <div class="form-group">
+      <label for="description" class="form-label">Description</label>
+      <textarea id="description" name="description" class="form-control" rows="4" required aria-required="true" placeholder="Enter course description"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="image" class="form-label">Course Thumbnail</label>
+      <input type="file" id="image" name="image" class="form-control" accept="image/*">
+    </div>
+
+    <div class="form-group">
+      <label for="video" class="form-label">Course Video</label>
+      <input type="file" id="video" name="video" class="form-control" accept="video/mp4,video/webm">
+    </div>
+
+    <div class="form-group">
+      <label for="topics" class="form-label">Topics (comma-separated)</label>
+      <input type="text" id="topics" name="topics" class="form-control" placeholder="Topic1, Topic2, ...">
+      <small class="form-text text-muted">Enter topics separated by commas. Example: Introduction, Variables, Loops</small>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block mt-3">Create Course</button>
+  </form>
+</article>
+{% endblock %}
+
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-{% endblock %}
 {% endblock %}

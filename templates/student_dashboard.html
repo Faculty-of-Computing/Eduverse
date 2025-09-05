@@ -1,56 +1,64 @@
 <!-- student_dashboard.html -->
 {% extends 'base_dash.html' %}
-{% block title %}Student dashboard | Eduverse{% endblock %}
+{% block title %}Student Dashboard | Eduverse{% endblock %}
+
 {% block content %}
-    <article class="profile-card" aria-labelledby="dashboard-header">
-      <header class="profile-header">
-        <div class="avatar" aria-hidden="true">{{ user.firstname[0]|upper }}</div>
-        <div>
-          <h2 id="dashboard-header">{{ user.firstname }} {{ user.lastname }}</h2>
-          <p>Student</p>
+<article class="profile-card" aria-labelledby="dashboard-header">
+  <!-- Student Info -->
+  <header class="profile-header">
+    <div class="avatar" aria-hidden="true">{{ user.firstname[0]|upper }}</div>
+    <div>
+      <h2 id="dashboard-header">{{ user.firstname }} {{ user.lastname }}</h2>
+      <p>{{ user.role|capitalize }}</p>
+    </div>
+  </header>
+
+  <div class="profile-info">
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Role:</strong> {{ user.role|capitalize }}</p>
+  </div>
+
+  <br>
+
+  <!-- Enrolled Courses -->
+  <h2 class="card-title">Your Enrolled Courses</h2>
+  {% if progress_data %}
+  <div class="course-grid">
+    {% for course_id, data in progress_data.items() %}
+    <article class="course-card">
+      <div class="thumbnail-container">
+        {% if data.image_path %}
+        <img src="{{ url_for('static', filename=data.image_path) }}" alt="{{ data.title }} thumbnail" class="course-thumbnail">
+        {% else %}
+        <div class="course-thumbnail placeholder" aria-hidden="true">No Image</div>
+        {% endif %}
+
+        <!-- Circular Progress -->
+        <div class="progress-circle small" data-progress="{{ data.progress }}" aria-label="Progress: {{ data.progress }}%">
+          <canvas id="progressCanvas{{ course_id }}" width="50" height="50"></canvas>
+          <div class="progress-text">{{ data.progress }}%</div>
         </div>
-      </header>
-
-      <div class="profile-info">
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Role:</strong> {{ user.role|capitalize }}</p>
       </div>
-    <br>
 
-      <h2 class="card-title">Your Enrolled Courses</h2>
-
-      {% if progress_data %}
-      <div class="course-grid">
-        {% for course_id, data in progress_data.items() %}
-        <article class="course-card">
-          <div class="thumbnail-container">
-            {% if data.image_path %}
-            <img src="{{ url_for('static', filename=data.image_path) }}" alt="{{ data.title }} thumbnail" class="course-thumbnail">
-            {% else %}
-            <div class="course-thumbnail placeholder" aria-hidden="true">No Image</div>
-            {% endif %}
-
-            <div class="progress-circle small" data-progress="{{ data.progress }}" aria-label="Progress: {{ data.progress }}%">
-              <canvas id="progressCanvas{{ course_id }}" width="50" height="50"></canvas>
-              <div class="progress-text">{{ data.progress }}%</div>
-            </div>
-          </div>
-
-          <h3 class="course-title">{{ data.title }}</h3>
-          <div class="course-progress">Progress: {{ data.progress }}%</div>
-          <a href="{{ url_for('course_detail', course_id=course_id) }}" class="btn btn-primary">Continue</a>
-        </article>
-        {% endfor %}
+      <h3 class="course-title">{{ data.title }}</h3>
+      <p class="course-progress">Progress: {{ data.progress }}%</p>
+      <div class="course-actions">
+        <a href="{{ url_for('course_detail', course_id=course_id) }}" class="btn btn-primary btn-block">Continue</a>
+        <a href="{{ url_for('assignment', course_id=course_id) }}" class="btn btn-secondary btn-block mt-1">Submit Assignment</a>
+        <a href="{{ url_for('list_pdfs') }}" class="btn btn-info btn-block mt-1">Course PDFs</a>
       </div>
-      {% else %}
-      <p class="card-text">
-        You are not enrolled in any courses yet.
-        <a href="{{ url_for('courses') }}">Enroll now!</a>
-      </p>
-      {% endif %}
     </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="card-text">
+    You are not enrolled in any courses yet.
+    <a href="{{ url_for('courses') }}">Enroll now!</a>
+  </p>
+  {% endif %}
+</article>
+{% endblock %}
 
 {% block extra_js %}
-  <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-{% endblock %}
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 {% endblock %}

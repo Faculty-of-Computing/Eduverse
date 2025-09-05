@@ -20,7 +20,7 @@
 
       <!-- PDF list table -->
       {% if pdfs %}
-        <div class="table-container">
+        <div class="table-wrap">
           <table class="styled-table">
             <thead>
               <tr>
@@ -60,7 +60,7 @@
       <!-- Links -->
       <div class="link-container">
         {% if role == 'instructor' %}
-          <a href="{{ url_for('upload_pdf') }}">⬆️ Upload New PDF</a>
+          <a href="{{ url_for('upload_pdf') }}" class="btn-secondary" >⬆️ Upload New PDF</a>
         {% endif %}
         <a href="{{ url_for('instructor_dashboard' if role == 'instructor' else 'student_dashboard') }}" class="btn-secondary">🏠 Back to Dashboard</a>
       </div>

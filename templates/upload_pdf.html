@@ -2,44 +2,46 @@
 {% block title %}Upload PDF | Eduverse{% endblock %}
 
 {% block content %}
-    <section class="dashboard-card" aria-labelledby="upload-title">
-<div class="main-content">
+<section class="dashboard-card" aria-labelledby="upload-title">
+  <div class="main-content">
     <div class="content-box">
-        <h2>📂 Upload PDF</h2>
-        <!-- Flash messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
+      <h2>📂 Upload PDF</h2>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
         {% endif %}
-    {% endwith %}
-    <br>
+      {% endwith %}
+      <br>
 
-        <form method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="course">Course:</label>
-                <select id="course" name="course" required>
-                    <option value="">Select a Course</option>
-                    <!-- Populate with courses dynamically -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="pdf_file">PDF File:</label>
-                <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" required>
-            </div>
-            <button type="submit" class="btn-upload">Upload</button>
-        </form>
+      <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="course">Course:</label>
+          <select id="course" name="course_id" required>
+            <option value="">Select a Course</option>
+            {% for course in courses %}
+              <option value="{{ course.id }}">{{ course.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="pdf_file">PDF File:</label>
+          <input type="file" id="pdf_file" name="pdf_file" accept=".pdf" required>
+        </div>
+
+        <button type="submit" class="btn-upload">Upload</button>
+      </form>
     </div>
-</div>
-<br>
+  </div>
+  <br>
 
-<div>
-        <a href="{{ url_for('list_pdfs') }}" class="btn-secondary">📑 Back to PDF List</a>
-        <a href="{{ url_for('instructor_dashboard' if role == 'instructor' else 'student_dashboard') }}" class="btn-secondary">🏠 Back to Dashboard</a>
-</div>
-    </section>
+  <div>
+    <a href="{{ url_for('list_pdfs') }}" class="btn-secondary">📑 Back to PDF List</a>
+    <a href="{{ url_for('instructor_dashboard' if role == 'instructor' else 'student_dashboard') }}" class="btn-secondary">🏠 Back to Dashboard</a>
+  </div>
+</section>
 {% endblock %}
-
-
- 

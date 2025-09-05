@@ -1,55 +1,58 @@
 <!-- course_detail.html -->
 {% extends 'base_dash.html' %}
 {% block title %}{{ course.title }} | Eduverse{% endblock %}
+
 {% block content %}
+<article class="profile-card" aria-labelledby="course-title">
+  {% if course.image_path %}
+  <img src="{{ url_for('static', filename=course.image_path) }}"
+       alt="{{ course.title }} thumbnail"
+       class="course-thumbnail">
+  {% endif %}
 
-    <article class="profile-card" aria-labelledby="course-title">
-      {% if course.image_path %}
-      <img src="{{ url_for('static', filename=course.image_path) }}"
-           alt="{{ course.title }} thumbnail image"
-           class="course-thumbnail">
-      {% endif %}
+  <h2 id="course-title" class="card-title">{{ course.title }}</h2>
+  <p class="card-text">{{ course.description }}</p>
 
-      <h2 id="course-title" class="card-title">{{ course.title }}</h2>
-      <p class="card-text">{{ course.description }}</p>
+  {% if course.video_path %}
+  <div class="video-container">
+    <video controls class="video-frame" aria-label="Course video">
+      <source src="{{ url_for('static', filename=course.video_path) }}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+  {% endif %}
 
-      {% if course.video_path %}
-      <div class="video-container">
-        <video controls class="video-frame" aria-label="Course video">
-          <source src="{{ url_for('static', filename=course.video_path) }}" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-      </div>
-      {% endif %}
+  <div class="progress-circle" data-progress="{{ progress }}" aria-label="Course progress: {{ progress }}%">
+    <canvas id="progressCanvas{{ course.id }}" width="100" height="100"></canvas>
+    <div class="progress-text">{{ progress }}%</div>
+  </div>
 
-      <div class="progress-circle" data-progress="{{ progress }}" aria-label="Course progress: {{ progress }}%">
-        <canvas id="progressCanvas{{ course.id }}" width="100" height="100"></canvas>
-        <div class="progress-text">{{ progress }}%</div>
-      </div>
+  <div class="course-progress">Progress: {{ progress }}%</div>
 
-      <div class="course-progress">Progress: {{ progress }}%</div>
+  <h3 class="card-title">Topics</h3>
+  {% if topics %}
+  <div class="course-grid">
+    {% for topic in topics %}
+    <div class="course-card topic-card">
+      <p class="card-text">
+        <strong>{{ topic }}</strong>
+        {% if topic in milestones %}
+        <span class="completed-mark" aria-label="Completed">✔ Completed</span>
+        {% else %}
+        <a href="{{ url_for('topic_page', course_id=course.id, topic_index=loop.index0) }}" class="btn btn-primary">Start</a>
+        {% endif %}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p>No topics available for this course yet.</p>
+  {% endif %}
 
-      <h3 class="card-title">Topics</h3>
-      <div class="course-grid">
-        {% for topic in topics %}
-        <div class="course-card topic-card">
-          <p class="card-text">
-            <strong>{{ topic }}</strong>
-            {% if topic in milestones %}
-            <span class="completed-mark" aria-label="Completed">✔ Completed</span>
-            {% else %}
-            <a href="{{ url_for('topic_page', course_id=course.id, topic_index=loop.index0) }}" class="btn btn-primary">Start</a>
-            {% endif %}
-          </p>
-        </div>
-        {% endfor %}
-      </div>
+  <a href="{{ url_for('assignment', course_id=course.id) }}" class="btn btn-primary mt-3">Submit Assignment</a>
+</article>
 
-      <a href="{{ url_for('assignment', course_id=course.id) }}" class="btn btn-primary">Submit Assignment</a>
-    </article>
-
-    {% block extra_js %}
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 {% endblock %}
 {% endblock %}
-

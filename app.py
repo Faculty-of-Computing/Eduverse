@@ -7,23 +7,32 @@ import os
 import secrets
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = 'your-secret-key'
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key')
 
-# Configure file upload settings
+# Configure file upload settings (for images/videos in other routes)
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'webm'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Configure PDF upload folder
-PDF_FOLDER = os.path.join('static', 'pdfs')
-os.makedirs(PDF_FOLDER, exist_ok=True)
-app.config['PDF_FOLDER'] = PDF_FOLDER
-
+# Configure Cloudinary
+cloudinary.config(
+    cloud_name=os.environ.get('cloud_name'),
+    api_key=os.environ.get('api_key'),
+    api_secret=os.environ.get('api_secret'),
+    cloud_url=os.environ.get('cloud_url')
+)
 
 # Initialize DB connection before each request
 @app.before_request
@@ -38,8 +47,7 @@ def teardown_db(exception):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
-# filter for formatting datetime
+# Filter for formatting datetime
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%Y-%m-%d %H:%M'):
     if value == 'now':
@@ -49,9 +57,8 @@ def datetimeformat(value, format='%Y-%m-%d %H:%M'):
     except (ValueError, TypeError):
         return value
 
-# ============================
+
 # PDF Management
-# ============================
 @app.route('/pdfs')
 def list_pdfs():
     db = get_db()
@@ -68,7 +75,6 @@ def list_pdfs():
     pdfs = cur.fetchall()
     cur.close()
     return render_template("list_pdfs.html", pdfs=pdfs, role=session.get("role", "student"))
-
 
 @app.route('/upload-pdf', methods=['GET', 'POST'])
 def upload_pdf():
@@ -91,13 +97,20 @@ def upload_pdf():
 
         filename = secure_filename(pdf_file.filename)
         unique_name = f"{secrets.token_hex(8)}_{filename}"
-        file_path = os.path.join(PDF_FOLDER, unique_name)
-        pdf_file.save(file_path)
+
+        # Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            pdf_file,
+            public_id=unique_name,
+            resource_type="raw",  # Use "raw" for non-image files like PDFs
+            overwrite=True
+        )
+        file_url = upload_result['secure_url']  # URL to access the file
 
         cur.execute("""
             INSERT INTO pdf_resources (filename, file_path, uploaded_by, uploaded_at, course_id)
             VALUES (%s, %s, %s, NOW(), %s)
-        """, (filename, file_path, session['user_id'], course_id))
+        """, (filename, file_url, session['user_id'], course_id))
         db.commit()
 
         flash("PDF uploaded successfully!", "success")
@@ -105,7 +118,6 @@ def upload_pdf():
 
     cur.close()
     return render_template("upload_pdf.html", courses=courses)
-
 
 @app.route('/view-pdf/<int:pdf_id>')
 def view_pdf(pdf_id):
@@ -115,15 +127,11 @@ def view_pdf(pdf_id):
     pdf = cur.fetchone()
     cur.close()
 
-    if not pdf or not os.path.exists(pdf['file_path']):
+    if not pdf or not pdf['file_path']:
         abort(404)
 
-    return send_from_directory(
-        os.path.dirname(pdf['file_path']),
-        os.path.basename(pdf['file_path']),
-        mimetype="application/pdf"
-    )
-
+    # Redirect to Cloudinary URL
+    return redirect(pdf['file_path'])
 
 @app.route('/download-pdf/<int:pdf_id>')
 def download_pdf(pdf_id):
@@ -133,16 +141,11 @@ def download_pdf(pdf_id):
     pdf = cur.fetchone()
     cur.close()
 
-    if not pdf or not os.path.exists(pdf['file_path']):
+    if not pdf or not pdf['file_path']:
         abort(404)
 
-    return send_from_directory(
-        os.path.dirname(pdf['file_path']),
-        os.path.basename(pdf['file_path']),
-        as_attachment=True,
-        download_name=pdf['filename']
-    )
-
+    # Cloudinary handles downloads via the URL
+    return redirect(pdf['file_path'])
 
 @app.route('/delete-pdf/<int:pdf_id>', methods=['POST'])
 def delete_pdf(pdf_id):
@@ -159,8 +162,10 @@ def delete_pdf(pdf_id):
         flash("PDF not found", "danger")
         return redirect(url_for("list_pdfs"))
 
-    if os.path.exists(pdf['file_path']):
-        os.remove(pdf['file_path'])
+    # Delete from Cloudinary
+    if pdf['file_path']:
+        public_id = pdf['file_path'].split('/')[-1].split('.')[0]  # Extract public_id
+        cloudinary.uploader.destroy(public_id, resource_type="raw")
 
     cur.execute("DELETE FROM pdf_resources WHERE id = %s", (pdf_id,))
     db.commit()
@@ -169,7 +174,7 @@ def delete_pdf(pdf_id):
     flash("PDF deleted successfully", "success")
     return redirect(url_for("list_pdfs"))
 
-
+# home page
 @app.route('/')
 def index():
     return render_template('index.html')

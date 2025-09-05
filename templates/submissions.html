@@ -1,31 +1,32 @@
 <!-- submissions.html -->
 {% extends 'base_dash.html' %}
-{% block title %}Edit Topic: Your Submissions | Eduverse{% endblock %}
+{% block title %}Your Submissions | Eduverse{% endblock %}
+
 {% block content %}
-  <section class="dashboard-card" aria-labelledby="submissions-title">
-    <h2 id="submissions-title" class="card-title">Your Assignment Submissions</h2>
+<section class="dashboard-card" aria-labelledby="submissions-title">
+  <h2 id="submissions-title" class="card-title">Your Assignment Submissions</h2>
 
-    {% if submissions %}
-    <div class="course-grid">
-      {% for submission in submissions %}
-      <article class="course-card">
-        <h3 class="course-title">Course: {{ submission.course_title }}</h3>
-        <p class="card-text">Submitted: {{ submission.submitted_at | datetimeformat or 'Unknown' }}</p>
-        <p class="card-text">Submission: {{ submission.submission_text | truncate(100, true) }}</p>
+  {% if submissions %}
+  <div class="course-grid">
+    {% for submission in submissions %}
+    <article class="course-card" role="article">
+      <h3 class="course-title">Course: {{ submission.course_title }}</h3>
+      <p class="card-text"><strong>Submitted:</strong> {{ submission.submitted_at | datetimeformat or 'Unknown' }}</p>
+      <p class="card-text"><strong>Submission:</strong> {{ submission.submission_text | truncate(100, true) }}</p>
 
-        {% if submission.feedback %}
-        <div class="feedback-section">
-          <p class="card-text"><strong>Feedback:</strong> {{ submission.feedback }}</p>
-          <p class="card-text"><strong>Grade:</strong> {{ submission.grade }}/100</p>
-        </div>
-        {% else %}
-        <p class="card-text">Awaiting feedback from instructor.</p>
-        {% endif %}
-      </article>
-      {% endfor %}
-    </div>
-    {% else %}
-    <p class="card-text">You have not submitted any assignments yet.</p>
-    {% endif %}
-  </section>
+      {% if submission.feedback %}
+      <div class="feedback-section" aria-label="Instructor Feedback">
+        <p class="card-text"><strong>Feedback:</strong> {{ submission.feedback }}</p>
+        <p class="card-text"><strong>Grade:</strong> {{ submission.grade }}/100</p>
+      </div>
+      {% else %}
+      <p class="card-text">Awaiting feedback from instructor.</p>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="card-text">You have not submitted any assignments yet. <a href="{{ url_for('courses') }}">Enroll in a course</a> to get started!</p>
+  {% endif %}
+</section>
 {% endblock %}
