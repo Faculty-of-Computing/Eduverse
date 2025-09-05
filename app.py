@@ -97,15 +97,9 @@ def upload_pdf():
 
         filename = secure_filename(pdf_file.filename)
         unique_name = f"{secrets.token_hex(8)}_{filename}"
-
-        # Upload to Cloudinary
-        upload_result = cloudinary.uploader.upload(
-            pdf_file,
-            public_id=unique_name,
-            resource_type="raw",  # Use "raw" for non-image files like PDFs
-            overwrite=True
-        )
-        file_url = upload_result['secure_url']  # URL to access the file
+        local_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+        pdf_file.save(local_path)
+        file_url = os.path.join('uploads', unique_name).replace('\\', '/')
 
         cur.execute("""
             INSERT INTO pdf_resources (filename, file_path, uploaded_by, uploaded_at, course_id)
