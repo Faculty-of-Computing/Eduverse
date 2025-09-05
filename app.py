@@ -637,13 +637,21 @@ def manage_courses():
 
                 cur.execute(update_query, params)
 
-                # Reset topics
-                cur.execute('DELETE FROM topics WHERE course_id = %s', (course_id,))
+                # Preserve topic content
+                cur.execute('SELECT topic_index, heading, content FROM topics WHERE course_id = %s', (course_id,))
+                existing_topics = {t['heading']: t['content'] for t in cur.fetchall()}
+
+                # Remove topics not in new list
+                cur.execute('DELETE FROM topics WHERE course_id = %s AND heading NOT IN %s', (course_id, tuple(topic_list) if topic_list else ('',)))
+
+                # Add/update topics
                 for index, topic in enumerate(topic_list):
-                    cur.execute(
-                        'INSERT INTO topics (course_id, topic_index, heading, content) VALUES (%s, %s, %s, %s)',
-                        (course_id, index, topic, '')
-                    )
+                    if topic in existing_topics:
+                        # Update topic_index if changed
+                        cur.execute('UPDATE topics SET topic_index = %s WHERE course_id = %s AND heading = %s', (index, course_id, topic))
+                    else:
+                        # Add new topic with empty content
+                        cur.execute('INSERT INTO topics (course_id, topic_index, heading, content) VALUES (%s, %s, %s, %s)', (course_id, index, topic, ''))
 
                 db.commit()
                 flash('Course updated!', 'success')
