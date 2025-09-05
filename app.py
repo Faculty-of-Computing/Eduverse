@@ -15,6 +15,12 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Debug: Print Cloudinary environment variables
+print('cloud_name:', os.environ.get('cloud_name'))
+print('api_key:', os.environ.get('api_key'))
+print('api_secret:', os.environ.get('api_secret'))
+print('cloud_url:', os.environ.get('cloud_url'))
+
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key')
