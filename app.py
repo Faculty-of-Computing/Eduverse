@@ -589,13 +589,18 @@ def manage_courses():
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
                     unique_filename = f"{secrets.token_hex(8)}_{filename}"
-                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-                    image_path = os.path.join('uploads', unique_filename).replace('\\', '/')
+                    upload_result = cloudinary.uploader.upload(
+                        file,
+                        public_id=unique_filename,
+                        resource_type="image",
+                        overwrite=True
+                    )
+                    image_path = upload_result['secure_url']
 
-                    # Remove old image
+                    # Remove old image (if it was stored locally)
                     cur.execute('SELECT image_path FROM courses WHERE id = %s', (course_id,))
                     old_course = cur.fetchone()
-                    if old_course and old_course['image_path']:
+                    if old_course and old_course['image_path'] and not old_course['image_path'].startswith('http'):
                         try:
                             os.remove(os.path.join('static', old_course['image_path']))
                         except OSError:
@@ -606,13 +611,18 @@ def manage_courses():
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
                     unique_filename = f"{secrets.token_hex(8)}_{filename}"
-                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-                    video_path = os.path.join('uploads', unique_filename).replace('\\', '/')
+                    upload_result = cloudinary.uploader.upload(
+                        file,
+                        public_id=unique_filename,
+                        resource_type="video",
+                        overwrite=True
+                    )
+                    video_path = upload_result['secure_url']
 
-                    # Remove old video
+                    # Remove old video (if it was stored locally)
                     cur.execute('SELECT video_path FROM courses WHERE id = %s', (course_id,))
                     old_course = cur.fetchone()
-                    if old_course and old_course['video_path']:
+                    if old_course and old_course['video_path'] and not old_course['video_path'].startswith('http'):
                         try:
                             os.remove(os.path.join('static', old_course['video_path']))
                         except OSError:
