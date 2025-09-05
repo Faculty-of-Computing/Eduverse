@@ -23,11 +23,15 @@
         {% if session.get('role') == 'student' %}
             <li><a href="{{ url_for('student_dashboard') }}" class="nav-link">Dashboard</a></li>
             <li><a href="{{ url_for('courses') }}" class="nav-link">Courses</a></li>
+            <li><a href="{{ url_for('list_pdfs') }}" class="nav-link">PDF Resources</a></li>
+            <li><a href="{{ url_for('submissions') }}" class="nav-link">Submissions</a></li>
             <li><a href="{{ url_for('profile') }}" class="nav-link">Profile</a></li>
         {% elif session.get('role') == 'instructor' %}
             <li><a href="{{ url_for('instructor_dashboard') }}" class="nav-link">Dashboard</a></li>
             <li><a href="{{ url_for('manage_courses') }}" class="nav-link">Manage Courses</a></li>
             <li><a href="{{ url_for('manage_topics') }}" class="nav-link">Manage Topics</a></li>
+            <li><a href="{{ url_for('upload_pdf') }}" class="nav-link">Upload PDF</a></li>
+            <li><a href="{{ url_for('list_pdfs') }}" class="nav-link">PDF Resources</a></li>
             <li><a href="{{ url_for('profile') }}" class="nav-link">Profile</a></li>
         {% endif %}
         <!-- Logout only when logged in -->

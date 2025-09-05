@@ -30,6 +30,9 @@ static/uploads/
 *.tmp
 *.bak
 
+#pdfs
+*.pdf
+
 # Jupyter Notebooks checkpoints
 .ipynb_checkpoints/
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, abort
 from database import init_db, get_db, close_db
 from datetime import datetime
 import psycopg2
@@ -19,6 +19,11 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
+# Configure PDF upload folder
+PDF_FOLDER = os.path.join('static', 'pdfs')
+os.makedirs(PDF_FOLDER, exist_ok=True)
+app.config['PDF_FOLDER'] = PDF_FOLDER
+
 
 # Initialize DB connection before each request
 @app.before_request
@@ -34,7 +39,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-#filter for formatting datetime
+# filter for formatting datetime
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%Y-%m-%d %H:%M'):
     if value == 'now':
@@ -44,7 +49,127 @@ def datetimeformat(value, format='%Y-%m-%d %H:%M'):
     except (ValueError, TypeError):
         return value
 
-# Home page route
+# ============================
+# PDF Management
+# ============================
+@app.route('/pdfs')
+def list_pdfs():
+    db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("""
+        SELECT p.id, p.filename, p.file_path, p.uploaded_at,
+               u.firstname || ' ' || u.lastname AS uploader,
+               c.title AS course_title
+        FROM pdf_resources p
+        LEFT JOIN users u ON p.uploaded_by = u.id
+        LEFT JOIN courses c ON p.course_id = c.id
+        ORDER BY p.uploaded_at DESC
+    """)
+    pdfs = cur.fetchall()
+    cur.close()
+    return render_template("list_pdfs.html", pdfs=pdfs, role=session.get("role", "student"))
+
+
+@app.route('/upload-pdf', methods=['GET', 'POST'])
+def upload_pdf():
+    if 'user_id' not in session or session['role'] != 'instructor':
+        flash("Unauthorized", "danger")
+        return redirect(url_for("list_pdfs"))
+
+    db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("SELECT id, title FROM courses")
+    courses = cur.fetchall()
+
+    if request.method == 'POST':
+        course_id = request.form.get("course_id")
+        pdf_file = request.files.get("pdf_file")
+
+        if not pdf_file or not course_id:
+            flash("Course and PDF required", "danger")
+            return redirect(url_for("upload_pdf"))
+
+        filename = secure_filename(pdf_file.filename)
+        unique_name = f"{secrets.token_hex(8)}_{filename}"
+        file_path = os.path.join(PDF_FOLDER, unique_name)
+        pdf_file.save(file_path)
+
+        cur.execute("""
+            INSERT INTO pdf_resources (filename, file_path, uploaded_by, uploaded_at, course_id)
+            VALUES (%s, %s, %s, NOW(), %s)
+        """, (filename, file_path, session['user_id'], course_id))
+        db.commit()
+
+        flash("PDF uploaded successfully!", "success")
+        return redirect(url_for("list_pdfs"))
+
+    cur.close()
+    return render_template("upload_pdf.html", courses=courses)
+
+
+@app.route('/view-pdf/<int:pdf_id>')
+def view_pdf(pdf_id):
+    db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("SELECT file_path, filename FROM pdf_resources WHERE id = %s", (pdf_id,))
+    pdf = cur.fetchone()
+    cur.close()
+
+    if not pdf or not os.path.exists(pdf['file_path']):
+        abort(404)
+
+    return send_from_directory(
+        os.path.dirname(pdf['file_path']),
+        os.path.basename(pdf['file_path']),
+        mimetype="application/pdf"
+    )
+
+
+@app.route('/download-pdf/<int:pdf_id>')
+def download_pdf(pdf_id):
+    db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("SELECT file_path, filename FROM pdf_resources WHERE id = %s", (pdf_id,))
+    pdf = cur.fetchone()
+    cur.close()
+
+    if not pdf or not os.path.exists(pdf['file_path']):
+        abort(404)
+
+    return send_from_directory(
+        os.path.dirname(pdf['file_path']),
+        os.path.basename(pdf['file_path']),
+        as_attachment=True,
+        download_name=pdf['filename']
+    )
+
+
+@app.route('/delete-pdf/<int:pdf_id>', methods=['POST'])
+def delete_pdf(pdf_id):
+    if 'user_id' not in session or session['role'] != 'instructor':
+        flash("Unauthorized", "danger")
+        return redirect(url_for("list_pdfs"))
+
+    db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("SELECT file_path FROM pdf_resources WHERE id = %s", (pdf_id,))
+    pdf = cur.fetchone()
+
+    if not pdf:
+        flash("PDF not found", "danger")
+        return redirect(url_for("list_pdfs"))
+
+    if os.path.exists(pdf['file_path']):
+        os.remove(pdf['file_path'])
+
+    cur.execute("DELETE FROM pdf_resources WHERE id = %s", (pdf_id,))
+    db.commit()
+    cur.close()
+
+    flash("PDF deleted successfully", "success")
+    return redirect(url_for("list_pdfs"))
+
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -564,6 +689,7 @@ def edit_topic(topic_id):
             flash('Failed to update topic content.', 'error')
     cur.close()
     return render_template('edit_topic.html', topic=topic)
+
 
 # Run app
 if __name__ == '__main__':

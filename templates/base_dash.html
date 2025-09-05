@@ -11,6 +11,7 @@
 
     <!-- Main Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/pdf_resources.css') }}"> -->
 
     {% block extra_css %}{% endblock %}
     {% block head %}{% endblock %}
@@ -24,12 +25,15 @@
                     {% if session.get('role') == 'student' %}
                         <a href="{{ url_for('student_dashboard') }}" class="nav-link">Dashboard</a>
                         <a href="{{ url_for('courses') }}" class="nav-link">Courses</a>
+                        <a href="{{ url_for('list_pdfs') }}" class="nav-link">PDF Resources</a>
                         <a href="{{ url_for('submissions') }}" class="nav-link">Submissions</a>
                         <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
                     {% elif session.get('role') == 'instructor' %}
                         <a href="{{ url_for('instructor_dashboard') }}" class="nav-link">Dashboard</a>
                         <a href="{{ url_for('manage_courses') }}" class="nav-link">Manage Courses</a>
                         <a href="{{ url_for('manage_topics') }}" class="nav-link">Manage Topics</a>
+                        <a href="{{ url_for('upload_pdf') }}" class="nav-link">Upload PDF</a>
+                        <a href="{{ url_for('list_pdfs') }}" class="nav-link">PDF Resources</a>
                         <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
                     {% endif %}
                     <!-- Logout only when logged in -->

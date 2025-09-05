@@ -26,7 +26,7 @@
                     <label class="field">
                         <div class="password-wrap">
                             <input type="password" name="password" placeholder="Password" required aria-required="true">
-                            <button class="eye" type="button" aria-label="Toggle password visibility">👁</button> <!-- Fixed: Moved 👁 inside button -->
+                            <button class="eye" type="button" aria-label="Toggle password visibility">👁</button>
                         </div>
                     </label>
                     <button class="btn-cta" type="submit">Login</button>
@@ -35,13 +35,4 @@
             </div>
         </div>
     </div>
-    <script>
-        document.querySelectorAll('.eye').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const input = btn.parentElement.querySelector('input');
-                input.type = input.type === 'password' ? 'text' : 'password';
-                btn.textContent = input.type === 'password' ? '👁' : '🙈'; // Enhanced: Toggle icon
-            });
-        });
-    </script>
 {% endblock %}

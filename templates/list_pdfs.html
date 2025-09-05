@@ -1,0 +1,70 @@
+{% extends 'base_dash.html' %}
+{% block title %}PDF Resources | Eduverse{% endblock %}
+
+{% block content %}
+<section class="dashboard-card" aria-labelledby="pdf-resources-title">
+  <div class="main-content">
+    <div class="content-box">
+      <h2 id="pdf-resources-title" class="page-title">📑 PDF Resources</h2>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <br>
+
+      <!-- PDF list table -->
+      {% if pdfs %}
+        <div class="table-container">
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Course</th>
+                <th>Filename</th>
+                <th>Uploaded By</th>
+                <th>Uploaded At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pdf in pdfs %}
+                <tr>
+                  <td>{{ pdf.course_title }}</td>
+                  <td>{{ pdf.filename }}</td>
+                  <td>{{ pdf.uploader }}</td>
+                  <td>{{ pdf.uploaded_at | datetimeformat }}</td>
+                  <td class="actions">
+                    <a href="{{ url_for('download_pdf', pdf_id=pdf.id) }}" class="btn-secondary">⬇️ Download</a>
+                    {% if role == 'instructor' %}
+                      <form action="{{ url_for('delete_pdf', pdf_id=pdf.id) }}" method="post" class="inline-form">
+                        <button type="submit" class="btn-danger" onclick="return confirm('Are you sure you want to delete this PDF?');">🗑️ Delete</button>
+                      </form>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="empty-message">No PDFs available.</p>
+      {% endif %}
+
+      <br>
+
+      <!-- Links -->
+      <div class="link-container">
+        {% if role == 'instructor' %}
+          <a href="{{ url_for('upload_pdf') }}" class="btn-primary">⬆️ Upload New PDF</a>
+        {% endif %}
+        <a href="{{ url_for('instructor_dashboard' if role == 'instructor' else 'student_dashboard') }}" class="btn-secondary">🏠 Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
