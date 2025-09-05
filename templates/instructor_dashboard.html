@@ -23,7 +23,11 @@
       <div class="course-card">
         <div class="course-title">{{ course.title }}</div>
         {% if course.image_path %}
-        <img src="{{ url_for('static', filename=course.image_path) }}" alt="{{ course.title }} Thumbnail" class="course-thumbnail">
+  {% if course.image_path.startswith('http') %}
+  <img src="{{ course.image_path }}" alt="{{ course.title }} Thumbnail" class="course-thumbnail">
+  {% else %}
+  <img src="{{ url_for('static', filename=course.image_path) }}" alt="{{ course.title }} Thumbnail" class="course-thumbnail">
+  {% endif %}
         {% endif %}
         <p class="card-text">{{ course.description | truncate(100, true) }}</p>
         <p class="card-text">Created: {{ course.created_at | datetimeformat }}</p>
