@@ -17,7 +17,8 @@ load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key')
+
+app.secret_key = os.environ.get('SECRET_KEY')
 
 # Configure file upload settings (for images/videos in other routes)
 UPLOAD_FOLDER = 'static/uploads'
@@ -28,10 +29,9 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # Configure Cloudinary
 cloudinary.config(
-    cloud_name=os.environ.get('cloud_name'),
-    api_key=os.environ.get('api_key'),
-    api_secret=os.environ.get('api_secret'),
-    cloud_url=os.environ.get('cloud_url')
+    cloud_name='dmjxkr42o',
+    api_key='657993854825672',
+    api_secret='r3nyRLMrZKcT_tXMVgAhNfZpPKE',
 )
 
 # Initialize DB connection before each request

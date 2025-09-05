@@ -2,9 +2,9 @@ import psycopg2
 import psycopg2.extras
 from flask import g
 
-# ==============================
+
 # Database Configuration
-# ==============================
+
 render_env = {
     "dbname": "eduverse_bl6a",
     "user": "eduverse_bl6a_user",
