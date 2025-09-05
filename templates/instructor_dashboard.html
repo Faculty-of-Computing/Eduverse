@@ -47,7 +47,7 @@
         <div class="course-title">Student: {{ submission.student_name }}</div>
         <p class="card-text">Course: {{ submission.course_title }}</p>
         <p class="card-text">Submitted: {{ submission.submitted_at | datetimeformat }}</p>
-        <p class="card-text">Submission: {{ submission.submission_text | truncate(100, true) }}</p>
+  <p class="card-text">Submission: {{ submission.submission_text }}</p>
 
         {% if not submission.feedback %}
         <form method="POST" action="{{ url_for('instructor_dashboard') }}">

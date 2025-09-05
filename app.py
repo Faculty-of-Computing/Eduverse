@@ -156,10 +156,17 @@ def delete_pdf(pdf_id):
         flash("PDF not found", "danger")
         return redirect(url_for("list_pdfs"))
 
-    # Delete from Cloudinary
-    if pdf['file_path']:
+    # Only delete from Cloudinary if the file_path is a Cloudinary URL
+    if pdf['file_path'] and pdf['file_path'].startswith('http'):
         public_id = pdf['file_path'].split('/')[-1].split('.')[0]  # Extract public_id
         cloudinary.uploader.destroy(public_id, resource_type="raw")
+    # If stored locally, remove the file from the uploads folder
+    elif pdf['file_path'] and pdf['file_path'].startswith('uploads/'):
+        local_path = os.path.join(app.config['UPLOAD_FOLDER'], pdf['file_path'].split('/')[-1])
+        try:
+            os.remove(local_path)
+        except OSError:
+            pass
 
     cur.execute("DELETE FROM pdf_resources WHERE id = %s", (pdf_id,))
     db.commit()
