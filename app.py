@@ -481,15 +481,25 @@ def create_course():
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 unique_filename = f"{secrets.token_hex(8)}_{filename}"
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-                image_path = os.path.join('uploads', unique_filename).replace('\\', '/')
+                upload_result = cloudinary.uploader.upload(
+                    file,
+                    public_id=unique_filename,
+                    resource_type="image",
+                    overwrite=True
+                )
+                image_path = upload_result['secure_url']
         if 'video' in request.files:
             file = request.files['video']
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
                 unique_filename = f"{secrets.token_hex(8)}_{filename}"
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-                video_path = os.path.join('uploads', unique_filename).replace('\\', '/')
+                upload_result = cloudinary.uploader.upload(
+                    file,
+                    public_id=unique_filename,
+                    resource_type="video",
+                    overwrite=True
+                )
+                video_path = upload_result['secure_url']
         db = get_db()
         cur = db.cursor()
         try:
