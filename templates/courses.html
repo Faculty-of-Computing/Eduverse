@@ -13,9 +13,15 @@
       <h3 class="course-title">{{ course.title }}</h3>
 
       {% if course.image_path %}
-      <img src="{{ url_for('static', filename=course.image_path) }}"
-           alt="{{ course.title }} thumbnail"
-           class="course-thumbnail">
+   {% if course.image_path.startswith('http') %}
+   <img src="{{ course.image_path }}"
+     alt="{{ course.title }} thumbnail"
+     class="course-thumbnail">
+   {% else %}
+   <img src="{{ url_for('static', filename=course.image_path) }}"
+     alt="{{ course.title }} thumbnail"
+     class="course-thumbnail">
+   {% endif %}
       {% else %}
       <div class="course-thumbnail placeholder" aria-hidden="true">No Image</div>
       {% endif %}

@@ -5,9 +5,15 @@
 {% block content %}
 <article class="profile-card" aria-labelledby="course-title">
   {% if course.image_path %}
+  {% if course.image_path.startswith('http') %}
+  <img src="{{ course.image_path }}"
+    alt="{{ course.title }} thumbnail"
+    class="course-thumbnail">
+  {% else %}
   <img src="{{ url_for('static', filename=course.image_path) }}"
-       alt="{{ course.title }} thumbnail"
-       class="course-thumbnail">
+    alt="{{ course.title }} thumbnail"
+    class="course-thumbnail">
+  {% endif %}
   {% endif %}
 
   <h2 id="course-title" class="card-title">{{ course.title }}</h2>
@@ -16,7 +22,11 @@
   {% if course.video_path %}
   <div class="video-container">
     <video controls class="video-frame" aria-label="Course video">
+      {% if course.video_path.startswith('http') %}
+      <source src="{{ course.video_path }}" type="video/mp4">
+      {% else %}
       <source src="{{ url_for('static', filename=course.video_path) }}" type="video/mp4">
+      {% endif %}
       Your browser does not support the video tag.
     </video>
   </div>
@@ -35,12 +45,11 @@
     {% for topic in topics %}
     <div class="course-card topic-card">
       <p class="card-text">
-        <strong>{{ topic }}</strong>
-        {% if topic in milestones %}
-        <span class="completed-mark" aria-label="Completed">✔ Completed</span>
-        {% else %}
-        <a href="{{ url_for('topic_page', course_id=course.id, topic_index=loop.index0) }}" class="btn btn-primary">Start</a>
-        {% endif %}
+  <strong>{{ topic }}</strong>
+  {% if topic in milestones %}
+  <span class="completed-mark" aria-label="Completed">✔ Completed</span>
+  {% endif %}
+  <a href="{{ url_for('topic_page', course_id=course.id, topic_index=loop.index0) }}" class="btn btn-primary">Go to Topic</a>
       </p>
     </div>
     {% endfor %}

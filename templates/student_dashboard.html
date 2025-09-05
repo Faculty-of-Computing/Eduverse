@@ -28,7 +28,11 @@
     <article class="course-card">
       <div class="thumbnail-container">
         {% if data.image_path %}
-        <img src="{{ url_for('static', filename=data.image_path) }}" alt="{{ data.title }} thumbnail" class="course-thumbnail">
+  {% if data.image_path.startswith('http') %}
+  <img src="{{ data.image_path }}" alt="{{ data.title }} thumbnail" class="course-thumbnail">
+  {% else %}
+  <img src="{{ url_for('static', filename=data.image_path) }}" alt="{{ data.title }} thumbnail" class="course-thumbnail">
+  {% endif %}
         {% else %}
         <div class="course-thumbnail placeholder" aria-hidden="true">No Image</div>
         {% endif %}
