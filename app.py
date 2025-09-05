@@ -17,7 +17,6 @@ load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY')
 
 
 # Configure file upload settings (for images/videos in other routes)
